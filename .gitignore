@@ -1,0 +1,11 @@
+bin/
+obj/
+/packages/
+/.vs
+/.idea
+/_ReSharper.Caches/
+/tmp/
+/*.DotSettings
+/deploy/pg_data/
+
+*.log
