@@ -39,6 +39,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         GlobalDefinitions.JwtBearerTokenValidationParameters(encryptHelper.GetPublicKey("user")));
 builder.Services.AddAuthorization();
 
+// Use Localization
+builder.Services.AddLocalization();
+
 // Add services to the container.
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddControllers();

@@ -41,4 +41,28 @@
         <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <EmbeddedResource Update="Resources\Errors\ErrorResource.en.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>ErrorResource.en.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+      <EmbeddedResource Update="Resources\Errors\ErrorResource.zh.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>ErrorResource.zh.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Resources\Errors\ErrorResource.en.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>ErrorResource.en.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Resources\Errors\ErrorResource.zh.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>ErrorResource.zh.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

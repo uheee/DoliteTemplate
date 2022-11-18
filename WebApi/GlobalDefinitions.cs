@@ -5,8 +5,6 @@ namespace WebApi;
 
 public static class GlobalDefinitions
 {
-    public const string LocalizationPath = "localization";
-
     public const string KeyPath = "keys";
 
     public const string ConnectionString = "Default";
