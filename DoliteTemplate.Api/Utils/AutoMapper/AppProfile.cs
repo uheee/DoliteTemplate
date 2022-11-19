@@ -11,6 +11,7 @@ public class AppProfile : Profile
     {
         CreateMap(typeof(PagedList<>), typeof(PagedList<>)).ConvertUsing(typeof(PageConverter<,>));
         CreateMap<Device, DeviceReadDto>();
+        CreateMap<DeviceCreateUpdateDto, Device>();
         // Set custom mappers
     }
 

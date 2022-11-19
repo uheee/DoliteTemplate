@@ -1,9 +1,10 @@
 using AutoMapper;
+using DoliteTemplate.Api.Utils;
 using DoliteTemplate.Api.Utils.Error;
 using DoliteTemplate.Domain.Utils;
 using Microsoft.EntityFrameworkCore;
 
-namespace DoliteTemplate.Api.Utils;
+namespace DoliteTemplate.Api.Services.Base;
 
 public class BaseService<TDbContext> where TDbContext : DbContext
 {
@@ -17,7 +18,7 @@ public class BaseService<TDbContext> where TDbContext : DbContext
         return UseTransaction(async provider => await action(await provider.GetDbContext()));
     }
 
-    protected Task<T> UseTransaction<T>(Func<TDbContext, Task<T>> action)
+    protected Task<TResult> UseTransaction<TResult>(Func<TDbContext, Task<TResult>> action)
     {
         return UseTransaction(async provider => await action(await provider.GetDbContext()));
     }
@@ -39,7 +40,7 @@ public class BaseService<TDbContext> where TDbContext : DbContext
         }
     }
 
-    protected async Task<T> UseTransaction<T>(Func<DbContextProvider<TDbContext>, Task<T>> action)
+    protected async Task<TResult> UseTransaction<TResult>(Func<DbContextProvider<TDbContext>, Task<TResult>> action)
     {
         try
         {
@@ -57,16 +58,17 @@ public class BaseService<TDbContext> where TDbContext : DbContext
         }
     }
 
-    protected async Task<PagedList<T>> PagingQuery<T>(Func<TDbContext, IQueryable<T>> query, int index, int pageSize)
+    public async Task<PagedList<TEntity>> PagingQuery<TEntity>(Func<TDbContext, IQueryable<TEntity>> query, int index,
+        int pageSize)
     {
-        if (index < 1) return PagedList<T>.Empty(index, pageSize);
+        if (index < 1) return PagedList<TEntity>.Empty(index, pageSize);
         return await UseTransaction(async provider =>
         {
             var itemCount = query(await provider.GetDbContext()).LongCountAsync();
             var items = query(await provider.GetDbContext()).Skip(pageSize * (index - 1)).Take(pageSize)
                 .ToArrayAsync();
             await Task.WhenAll(itemCount, items);
-            return new PagedList<T>(await items, await itemCount, index, pageSize);
+            return new PagedList<TEntity>(await items, await itemCount, index, pageSize);
         });
     }
 }
