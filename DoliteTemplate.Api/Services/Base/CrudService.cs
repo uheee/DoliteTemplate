@@ -20,42 +20,43 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<TReadDto>(result);
     }
 
-    public async Task<IEnumerable<TReadDto>> Get()
+    public async Task<IEnumerable<TReadDto>> GetAll()
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
             .ToArrayAsync();
         return Mapper.Map<IEnumerable<TReadDto>>(result);
     }
 
-    public async Task<IEnumerable<TReadDto>> Get(Expression<Func<TEntity, bool>> condition)
+    public async Task<IEnumerable<TReadDto>> GetWhere(Expression<Func<TEntity, bool>> condition)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
             .Where(condition).ToArrayAsync();
         return Mapper.Map<IEnumerable<TReadDto>>(result);
     }
 
-    public async Task<PagedList<TReadDto>> Get(int index, int pageSize)
+    public async Task<PagedList<TReadDto>> GetAllPaged(int index, int pageSize)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
             .ToPagedListAsync(index, pageSize);
         return Mapper.Map<PagedList<TReadDto>>(result);
     }
 
-    public async Task<PagedList<TReadDto>> Get(Expression<Func<TEntity, bool>> condition, int index, int pageSize)
+    public async Task<PagedList<TReadDto>> GetWherePaged(Expression<Func<TEntity, bool>> condition, int index,
+        int pageSize)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
             .Where(condition).ToPagedListAsync(index, pageSize);
         return Mapper.Map<PagedList<TReadDto>>(result);
     }
 
-    public async Task<IEnumerable<TReadDto>> Get(QueryOptions<TEntity> queryOptions)
+    public async Task<IEnumerable<TReadDto>> Query(QueryOptions<TEntity> queryOptions)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
             .ToArrayAsync();
         return Mapper.Map<IEnumerable<TReadDto>>(result);
     }
 
-    public async Task<PagedList<TReadDto>> Get(QueryOptions<TEntity> queryOptions, int index, int pageSize)
+    public async Task<PagedList<TReadDto>> QueryPaged(QueryOptions<TEntity> queryOptions, int index, int pageSize)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
             .ToPagedListAsync(index, pageSize);
@@ -99,7 +100,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<TReadDto>(result);
     }
 
-    public async Task<int> Delete(IEnumerable<Guid> ids)
+    public async Task<int> DeleteRange(IEnumerable<Guid> ids)
     {
         var entities = ids.Select(id => new TEntity { Id = id }).ToList();
         DbContext.Set<TEntity>().AttachRange(entities);

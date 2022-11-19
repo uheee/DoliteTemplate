@@ -26,7 +26,7 @@ public class DeviceController : ControllerBase
     [ProducesResponseType(typeof(ErrorInfo), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> GetPagingDevices(int index = 1, int pageSize = 10)
     {
-        var result = await DeviceService.Get(index, pageSize);
+        var result = await DeviceService.GetAllPaged(index, pageSize);
         return Ok(result);
     }
 
