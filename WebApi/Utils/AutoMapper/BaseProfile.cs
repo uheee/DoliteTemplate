@@ -16,7 +16,8 @@ public class BaseProfile : Profile
 
     private class PageConverter<TSource, TDestination> : ITypeConverter<PagedList<TSource>, PagedList<TDestination>>
     {
-        public PagedList<TDestination> Convert(PagedList<TSource> source, PagedList<TDestination> destination, ResolutionContext context)
+        public PagedList<TDestination> Convert(PagedList<TSource> source, PagedList<TDestination> destination,
+            ResolutionContext context)
         {
             var items = context.Mapper.Map<IEnumerable<TDestination>>(source.Content);
             return new PagedList<TDestination>(items, source.ItemCount, source.Index, source.PageSize);

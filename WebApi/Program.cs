@@ -4,7 +4,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +11,12 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using WebApi;
 using WebApi.Utils;
-using WebApi.Utils.Autofac;
-using WebApi.Utils.AutoMapper;
 using WebApi.Utils.Error;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Init Global
+GlobalDefinitions.Configuration = builder.Configuration;
 
 // Use Serilog
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
@@ -24,13 +24,13 @@ builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Confi
 // Use Autofac
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(options =>
-    options.RegisterModule(new BaseModule(builder.Configuration)));
+    options.RegisterAssemblyModules(Assembly.GetExecutingAssembly()));
 
 // Use AutoMapper
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 // Use EF Core
-builder.Services.AddDbContext<ApiDbContext>();
+// builder.Services.AddDbContext<ApiDbContext>();
 
 // Use Auth
 var encryptHelper = new EncryptHelper(GlobalDefinitions.KeyPath);

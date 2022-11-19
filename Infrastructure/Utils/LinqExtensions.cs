@@ -13,7 +13,7 @@ public static class LinqExtensions
             .ToArray();
         return new PagedList<T>(items, itemCount, index, pageSize);
     }
-    
+
     public static async Task<PagedList<T>> ToPagedListAsync<T>(this IQueryable<T> queryable, int index, int pageSize)
     {
         if (index < 1) return PagedList<T>.Empty(index, pageSize);

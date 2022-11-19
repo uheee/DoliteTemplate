@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{886F430A-890B-4925-9976-39C0C7C5F7B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbMigrator", "DbMigrator\DbMigrator.csproj", "{A55D9E87-B6BB-4660-B965-A11CF73EB115}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{886F430A-890B-4925-9976-39C0C7C5F7B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{886F430A-890B-4925-9976-39C0C7C5F7B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{886F430A-890B-4925-9976-39C0C7C5F7B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A55D9E87-B6BB-4660-B965-A11CF73EB115}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A55D9E87-B6BB-4660-B965-A11CF73EB115}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A55D9E87-B6BB-4660-B965-A11CF73EB115}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A55D9E87-B6BB-4660-B965-A11CF73EB115}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -46,6 +46,8 @@ public static class GlobalDefinitions
         }
     };
 
+    public static IConfiguration Configuration { get; set; } = null!;
+
     public static TokenValidationParameters JwtBearerTokenValidationParameters(SecurityKey publicKey)
     {
         return new TokenValidationParameters

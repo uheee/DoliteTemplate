@@ -34,7 +34,7 @@ namespace Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "Devices",
                 columns: new[] { "Id", "CreationTime", "CreatorId", "DeleterId", "DeletionTime", "IsDeleted", "LastModificationTime", "LastModifierId", "Name", "Type" },
-                values: new object[] { new Guid("3aafada7-a31d-4824-a471-bb26479801cc"), null, null, null, null, false, null, null, "Computer", "Electric" });
+                values: new object[] { new Guid("a66f1878-d057-40af-bad7-6729717d68de"), null, null, null, null, false, null, null, "Computer", "Electric" });
         }
 
         /// <inheritdoc />
