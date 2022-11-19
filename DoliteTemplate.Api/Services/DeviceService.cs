@@ -7,7 +7,7 @@ using DoliteTemplate.Infrastructure.DbContexts;
 namespace DoliteTemplate.Api.Services;
 
 public class DeviceService :
-    CrudService<ApiDbContext, Device, DeviceReadDto, DeviceCreateUpdateDto>,
+    CrudService<ApiDbContext, Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto>,
     IDeviceService
 {
 }

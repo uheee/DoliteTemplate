@@ -15,7 +15,7 @@ namespace DoliteTemplate.Api.Controllers;
 public class DeviceController : ControllerBase
 {
     // public IDeviceService DeviceService { get; init; } = null!;
-    public ICrudService<Device, DeviceReadDto, DeviceCreateUpdateDto> DeviceService { get; init; } = null!;
+    public ICrudService<Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto> DeviceService { get; init; } = null!;
 
     /// <summary>
     ///     Get Paging Devices
@@ -38,7 +38,7 @@ public class DeviceController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorInfo), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> CreateDevice(DeviceCreateUpdateDto body)
+    public async Task<ActionResult> CreateDevice(DeviceCreateDto body)
     {
         await DeviceService.Create(body);
         return Ok(true);
@@ -54,7 +54,7 @@ public class DeviceController : ControllerBase
     [Route("{id:guid}")]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorInfo), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> UpdateDevice(Guid id, DeviceCreateUpdateDto body)
+    public async Task<ActionResult> UpdateDevice(Guid id, DeviceUpdateDto body)
     {
         await DeviceService.Update(id, body);
         return Ok(true);
