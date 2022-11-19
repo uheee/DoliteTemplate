@@ -28,7 +28,7 @@ public static class LinqExtensions
     public static IQueryable<TEntity> SkipDeleted<TEntity>(this IQueryable<TEntity> query)
     {
         return typeof(TEntity).IsAssignableTo(typeof(ISoftDelete))
-            ? query.Where(entity => !((ISoftDelete) entity!).IsDeleted)
+            ? query.Where(entity => !((ISoftDelete)entity!).IsDeleted)
             : query;
     }
 

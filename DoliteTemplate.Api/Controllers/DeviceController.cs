@@ -1,6 +1,7 @@
 using DoliteTemplate.Api.Utils.Error;
 using DoliteTemplate.Domain.DTOs;
-using DoliteTemplate.Domain.Services;
+using DoliteTemplate.Domain.Entities;
+using DoliteTemplate.Domain.Services.Base;
 using DoliteTemplate.Domain.Utils;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +14,8 @@ namespace DoliteTemplate.Api.Controllers;
 [Route("[controller]")]
 public class DeviceController : ControllerBase
 {
-    public IDeviceService DeviceService { get; init; } = null!;
+    // public IDeviceService DeviceService { get; init; } = null!;
+    public ICrudService<Device, DeviceReadDto, DeviceCreateUpdateDto> DeviceService { get; init; } = null!;
 
     /// <summary>
     ///     Get Paging Devices
@@ -22,9 +24,9 @@ public class DeviceController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(PagedList<DeviceReadDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorInfo), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> GetPagingDevices(int index, int pageSize)
+    public async Task<ActionResult> GetPagingDevices(int index = 1, int pageSize = 10)
     {
-        var result = await DeviceService.Read(index, pageSize);
+        var result = await DeviceService.Get(index, pageSize);
         return Ok(result);
     }
 

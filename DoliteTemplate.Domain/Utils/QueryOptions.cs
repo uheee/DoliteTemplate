@@ -6,7 +6,7 @@ public static class QueryOptions
 {
     public static QueryOptions<TEntity> For<TEntity>()
     {
-        return new();
+        return new QueryOptions<TEntity>();
     }
 
     public static QueryOptions<TEntity> Where<TEntity>(this QueryOptions<TEntity> options,

@@ -1,12 +1,13 @@
 using AutoMapper;
 using DoliteTemplate.Api.Utils;
 using DoliteTemplate.Api.Utils.Error;
+using DoliteTemplate.Domain.Services.Base;
 using DoliteTemplate.Domain.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace DoliteTemplate.Api.Services.Base;
 
-public class BaseService<TDbContext> where TDbContext : DbContext
+public class BaseService<TDbContext> : IBaseService where TDbContext : DbContext
 {
     public IMapper Mapper { get; init; } = null!;
     public ExceptionFactory ExceptionFactory { get; init; } = null!;
