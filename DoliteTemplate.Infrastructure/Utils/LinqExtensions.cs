@@ -1,4 +1,4 @@
-using DoliteTemplate.Domain.Base;
+using DoliteTemplate.Domain.Entities.Base;
 using DoliteTemplate.Domain.Utils;
 using Microsoft.EntityFrameworkCore;
 

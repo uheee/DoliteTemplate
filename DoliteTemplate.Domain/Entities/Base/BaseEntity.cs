@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DoliteTemplate.Domain.Base;
+namespace DoliteTemplate.Domain.Entities.Base;
 
 public class BaseEntity
 {

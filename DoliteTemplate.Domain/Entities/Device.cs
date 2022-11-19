@@ -1,4 +1,4 @@
-using DoliteTemplate.Domain.Base;
+using DoliteTemplate.Domain.Entities.Base;
 
 namespace DoliteTemplate.Domain.Entities;
 

@@ -1,4 +1,4 @@
-namespace DoliteTemplate.Domain.Base;
+namespace DoliteTemplate.Domain.Entities.Base;
 
 public class AuditedEntity : BaseEntity, IAudited
 {

@@ -1,6 +1,6 @@
-namespace DoliteTemplate.Domain.Base;
+namespace DoliteTemplate.Domain.Entities.Base;
 
-public class SoftDeleteEntity : BaseEntity, ISoftDelete
+public interface ISoftDelete
 {
     public bool IsDeleted { get; set; }
     public Guid? DeleterId { get; set; }

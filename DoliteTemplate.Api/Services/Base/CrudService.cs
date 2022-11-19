@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using DoliteTemplate.Domain.Base;
+using DoliteTemplate.Domain.Entities.Base;
 using DoliteTemplate.Domain.Utils;
 using DoliteTemplate.Infrastructure.Utils;
 using Microsoft.EntityFrameworkCore;
