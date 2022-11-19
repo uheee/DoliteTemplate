@@ -1,12 +1,11 @@
 using System.Data.Common;
-using DoliteTemplate.Infrastructure.DbContexts;
 using Microsoft.EntityFrameworkCore;
 
 namespace DoliteTemplate.Api.Utils;
 
-public class TransactionDbContextProvider : IDisposable
+public class DbContextProvider<TDbContext> : IDisposable where TDbContext : DbContext
 {
-    private readonly List<DbContext> _dbContexts = new();
+    private readonly List<TDbContext> _dbContexts = new();
     public DbConnection DbConnection { get; init; } = null!;
     public DbTransaction Transaction { get; init; } = null!;
 
@@ -16,9 +15,9 @@ public class TransactionDbContextProvider : IDisposable
     }
 
 
-    public async Task<ApiDbContext> GetDbContext()
+    public async Task<TDbContext> GetDbContext()
     {
-        var dbContext = new ApiDbContext(DbConnection);
+        var dbContext = DbConnection.GetDbContext<TDbContext>();
         await dbContext.Database.UseTransactionAsync(Transaction);
         _dbContexts.Add(dbContext);
         return dbContext;

@@ -2,11 +2,12 @@ using DoliteTemplate.Api.Utils;
 using DoliteTemplate.Domain.DTOs;
 using DoliteTemplate.Domain.Services;
 using DoliteTemplate.Domain.Utils;
+using DoliteTemplate.Infrastructure.DbContexts;
 using DoliteTemplate.Infrastructure.Utils;
 
 namespace DoliteTemplate.Api.Services;
 
-public class DeviceServiceImpl : BaseService, IDeviceService
+public class DeviceServiceImpl : BaseService<ApiDbContext>, IDeviceService
 {
     public async Task<PagedList<DeviceReadDto>> GetExampleDevice(bool exception)
     {

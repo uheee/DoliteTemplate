@@ -18,6 +18,6 @@ public class DbModule : Module
         builder.Register(context => context.Resolve<DbDataSource>().OpenConnection()).As<DbConnection>()
             .InstancePerLifetimeScope();
         builder.Register(context => context.Resolve<DbConnection>().BeginTransaction()).As<DbTransaction>();
-        builder.RegisterType<TransactionDbContextProvider>().AsSelf().PropertiesAutowired();
+        builder.RegisterGeneric(typeof(DbContextProvider<>)).AsSelf().PropertiesAutowired();
     }
 }

@@ -1,29 +1,28 @@
 using AutoMapper;
 using DoliteTemplate.Api.Utils.Error;
 using DoliteTemplate.Domain.Utils;
-using DoliteTemplate.Infrastructure.DbContexts;
 using Microsoft.EntityFrameworkCore;
 
 namespace DoliteTemplate.Api.Utils;
 
-public class BaseService
+public class BaseService<TDbContext> where TDbContext : DbContext
 {
     public IMapper Mapper { get; init; } = null!;
     public ExceptionFactory ExceptionFactory { get; init; } = null!;
-    public ApiDbContext DbContext { get; init; } = null!;
-    public TransactionDbContextProvider DbContextProvider { get; init; } = null!;
+    public TDbContext DbContext { get; init; } = null!;
+    public DbContextProvider<TDbContext> DbContextProvider { get; init; } = null!;
 
-    protected Task UseTransaction(Func<ApiDbContext, Task> action)
+    protected Task UseTransaction(Func<TDbContext, Task> action)
     {
         return UseTransaction(async provider => await action(await provider.GetDbContext()));
     }
 
-    protected Task<T> UseTransaction<T>(Func<ApiDbContext, Task<T>> action)
+    protected Task<T> UseTransaction<T>(Func<TDbContext, Task<T>> action)
     {
         return UseTransaction(async provider => await action(await provider.GetDbContext()));
     }
 
-    protected async Task UseTransaction(Func<TransactionDbContextProvider, Task> action)
+    protected async Task UseTransaction(Func<DbContextProvider<TDbContext>, Task> action)
     {
         try
         {
@@ -40,7 +39,7 @@ public class BaseService
         }
     }
 
-    protected async Task<T> UseTransaction<T>(Func<TransactionDbContextProvider, Task<T>> action)
+    protected async Task<T> UseTransaction<T>(Func<DbContextProvider<TDbContext>, Task<T>> action)
     {
         try
         {
@@ -58,7 +57,7 @@ public class BaseService
         }
     }
 
-    protected async Task<PagedList<T>> PagingQuery<T>(Func<ApiDbContext, IQueryable<T>> query, int index, int pageSize)
+    protected async Task<PagedList<T>> PagingQuery<T>(Func<TDbContext, IQueryable<T>> query, int index, int pageSize)
     {
         if (index < 1) return PagedList<T>.Empty(index, pageSize);
         return await UseTransaction(async provider =>
