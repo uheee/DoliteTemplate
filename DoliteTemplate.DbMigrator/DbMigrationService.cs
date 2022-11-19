@@ -19,5 +19,6 @@ public class DbMigrationService : BackgroundService
     {
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync(stoppingToken);
         await dbContext.Database.MigrateAsync(stoppingToken);
+        Environment.Exit(0);
     }
 }
