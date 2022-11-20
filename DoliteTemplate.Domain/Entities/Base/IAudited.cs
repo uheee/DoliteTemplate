@@ -6,4 +6,16 @@ public interface IAudited
     DateTime? CreationTime { get; set; }
     Guid? LastModifierId { get; set; }
     DateTime? LastModificationTime { get; set; }
+
+    void CreateBy(Guid id)
+    {
+        CreatorId = id;
+        CreationTime = DateTime.UtcNow;
+    }
+
+    void ModifyBy(Guid id)
+    {
+        LastModifierId = id;
+        LastModificationTime = DateTime.UtcNow;
+    }
 }

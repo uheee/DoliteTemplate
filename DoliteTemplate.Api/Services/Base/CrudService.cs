@@ -88,7 +88,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         switch (entity)
         {
             case ISoftDelete softDelete:
-                softDelete.IsDeleted = true;
+                softDelete.Delete();
                 result = entity;
                 break;
             default:
@@ -105,7 +105,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         var entities = ids.Select(id => new TEntity { Id = id }).ToList();
         DbContext.Set<TEntity>().AttachRange(entities);
         if (typeof(TEntity).IsAssignableTo(typeof(ISoftDelete)))
-            entities.ForEach(entity => ((ISoftDelete)entity).IsDeleted = true);
+            entities.ForEach(entity => ((ISoftDelete)entity).Delete());
         else
             DbContext.Set<TEntity>().RemoveRange(entities);
         var result = await DbContext.SaveChangesAsync();
