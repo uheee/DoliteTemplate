@@ -12,8 +12,8 @@ public static class GlobalDefinitions
     public static readonly OpenApiInfo OpenApiInfo = new()
     {
         Version = "v1",
-        Title = "Dolite",
-        Description = "Dolite Templates"
+        Title = "DoliteTemplate",
+        Description = "Some description of your API"
     };
 
     public static readonly OpenApiSecurityScheme OpenApiSecurityScheme = new()
