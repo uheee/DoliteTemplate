@@ -73,7 +73,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
 
     public async Task<TReadDto> Update(Guid id, TUpdateDto dto)
     {
-        var entity = new TEntity { Id = id };
+        var entity = new TEntity {Id = id};
         DbContext.Set<TEntity>().Attach(entity);
         Mapper.Map(dto, entity);
         await DbContext.SaveChangesAsync();
@@ -82,7 +82,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
 
     public async Task<TReadDto> Delete(Guid id)
     {
-        var entity = new TEntity { Id = id };
+        var entity = new TEntity {Id = id};
         DbContext.Set<TEntity>().Attach(entity);
         TEntity result;
         switch (entity)
@@ -102,10 +102,10 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
 
     public async Task<int> DeleteRange(IEnumerable<Guid> ids)
     {
-        var entities = ids.Select(id => new TEntity { Id = id }).ToList();
+        var entities = ids.Select(id => new TEntity {Id = id}).ToList();
         DbContext.Set<TEntity>().AttachRange(entities);
         if (typeof(TEntity).IsAssignableTo(typeof(ISoftDelete)))
-            entities.ForEach(entity => ((ISoftDelete)entity).Delete());
+            entities.ForEach(entity => ((ISoftDelete) entity).Delete());
         else
             DbContext.Set<TEntity>().RemoveRange(entities);
         var result = await DbContext.SaveChangesAsync();

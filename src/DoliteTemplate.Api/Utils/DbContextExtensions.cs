@@ -10,7 +10,7 @@ public static class DbContextExtensions
     {
         return typeof(TDbContext) switch
         {
-            var type when type == typeof(ApiDbContext) => (TDbContext)(object)new ApiDbContext(connection),
+            var type when type == typeof(ApiDbContext) => (TDbContext) (object) new ApiDbContext(connection),
             _ => throw new ArgumentException()
         };
     }

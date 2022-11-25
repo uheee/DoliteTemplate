@@ -52,7 +52,7 @@ public static class GlobalDefinitions
     {
         return new TokenValidationParameters
         {
-            ValidTypes = new[] { "JWT" },
+            ValidTypes = new[] {"JWT"},
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = publicKey,
             ValidateIssuer = false,
