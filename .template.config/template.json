@@ -2,9 +2,9 @@
   "$schema": "https://json.schemastore.org/template",
   "author": "Snowind",
   "classifications": [ "WebAPI", "ASP.NET" ],
-  "identity": "Snowind.DoliteTemplate.Api",
-  "groupIdentity": "Snowind.DoliteTemplate",
-  "name": "Dolite Template API",
+  "identity": "Dolite.Templates.Api.Solution",
+  "groupIdentity": "Dolite.Templates",
+  "name": "Dolite Web API Solution Template",
   "shortName": "dl-api",
   "sourceName": "DoliteTemplate",
   "tags": {

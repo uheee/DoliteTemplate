@@ -5,6 +5,7 @@ obj/
 /.idea
 /_ReSharper.Caches/
 /tmp/
-*.DotSettings.user
+**.DotSettings.user
+**.nupkg
 
 *.log
