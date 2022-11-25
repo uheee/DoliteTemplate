@@ -1,7 +1,7 @@
 using System.Reflection;
 using Autofac;
+using DoliteTemplate.Api.Services.Base;
 using DoliteTemplate.Api.Utils.Error;
-using DoliteTemplate.Domain.Services.Base;
 using Microsoft.AspNetCore.Mvc;
 using Module = Autofac.Module;
 
@@ -15,7 +15,7 @@ public class AppModule : Module
             .Where(type => type.BaseType == typeof(ControllerBase))
             .PropertiesAutowired();
         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-            .Where(type => type.IsAssignableTo<IBaseService>())
+            .Where(type => type.IsAssignableTo<BaseService>())
             .AsImplementedInterfaces()
             .PropertiesAutowired();
         builder.RegisterType<ExceptionFactory>().PropertiesAutowired();

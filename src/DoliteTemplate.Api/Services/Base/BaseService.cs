@@ -7,10 +7,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DoliteTemplate.Api.Services.Base;
 
-public class BaseService<TDbContext> : IBaseService where TDbContext : DbContext
+public class BaseService
 {
     public IMapper Mapper { get; init; } = null!;
     public ExceptionFactory ExceptionFactory { get; init; } = null!;
+}
+
+public class BaseService<TDbContext> : BaseService, IBaseService where TDbContext : DbContext
+{
     public TDbContext DbContext { get; init; } = null!;
     public DbContextProvider<TDbContext> DbContextProvider { get; init; } = null!;
 
