@@ -3,7 +3,7 @@
   <metadata>
     
     <id>Dolite.Templates.Api.Solution</id>
-    <version>0.1.1</version>
+    <version>0.1.0</version>
     <title>Dolite Web API Solution Template</title>
     <authors>Snowind</authors>
     <description>An out-of-box Web API solution template for .NET 7</description>
