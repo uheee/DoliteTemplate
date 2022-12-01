@@ -17,6 +17,7 @@ public class AppModule : Module
         builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
             .Where(type => type.IsAssignableTo<BaseService>())
             .AsImplementedInterfaces()
+            .AsSelf()
             .PropertiesAutowired();
         builder.RegisterType<ExceptionFactory>().PropertiesAutowired();
         // Set custom injection rules

@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoliteTemplate.Domain", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoliteTemplate.Infrastructure", "src\DoliteTemplate.Infrastructure\DoliteTemplate.Infrastructure.csproj", "{6DB49C50-0278-4F15-AFA5-078B654BAA98}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoliteTemplate.Tools", "src\DoliteTemplate.Tools\DoliteTemplate.Tools.csproj", "{BBFF5AB1-C085-4384-8D62-17E6C469215A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,11 +34,16 @@ Global
 		{6DB49C50-0278-4F15-AFA5-078B654BAA98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6DB49C50-0278-4F15-AFA5-078B654BAA98}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6DB49C50-0278-4F15-AFA5-078B654BAA98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBFF5AB1-C085-4384-8D62-17E6C469215A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBFF5AB1-C085-4384-8D62-17E6C469215A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBFF5AB1-C085-4384-8D62-17E6C469215A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBFF5AB1-C085-4384-8D62-17E6C469215A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F380F257-A336-491E-BBC1-9635D45BA06C} = {3D6BDBDE-DCA1-4FFA-AF12-5EC9D608225E}
 		{05E7C69B-68D6-4788-BD9D-6B64C6438B00} = {3D6BDBDE-DCA1-4FFA-AF12-5EC9D608225E}
 		{5CB3ED0F-834D-4508-A149-BF497F5EF018} = {3D6BDBDE-DCA1-4FFA-AF12-5EC9D608225E}
 		{6DB49C50-0278-4F15-AFA5-078B654BAA98} = {3D6BDBDE-DCA1-4FFA-AF12-5EC9D608225E}
+		{BBFF5AB1-C085-4384-8D62-17E6C469215A} = {3D6BDBDE-DCA1-4FFA-AF12-5EC9D608225E}
 	EndGlobalSection
 EndGlobal

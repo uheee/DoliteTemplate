@@ -3,6 +3,7 @@ using DoliteTemplate.Domain.Entities.Base;
 using DoliteTemplate.Domain.Services.Base;
 using DoliteTemplate.Domain.Utils;
 using DoliteTemplate.Infrastructure.Utils;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DoliteTemplate.Api.Services.Base;
@@ -13,6 +14,8 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     where TDbContext : DbContext
     where TEntity : BaseEntity, new()
 {
+    [HttpGet]
+    [Route("{id:guid}")]
     public async Task<TReadDto> Get(Guid id)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
@@ -20,6 +23,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<TReadDto>(result);
     }
 
+    [HttpGet]
     public async Task<IEnumerable<TReadDto>> GetAll()
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
@@ -41,6 +45,8 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<TReadDto>(result);
     }
 
+    [HttpGet]
+    [Route("paging")]
     public async Task<PagedList<TReadDto>> GetAllPaged(int index, int pageSize)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
@@ -77,7 +83,8 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<PagedList<TReadDto>>(result);
     }
 
-    public async Task<TReadDto> Create(TCreateDto dto)
+    [HttpPost]
+    public async Task<TReadDto> Create([FromBody] TCreateDto dto)
     {
         var entity = Mapper.Map<TEntity>(dto);
         DbContext.Set<TEntity>().Add(entity);
@@ -85,7 +92,9 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return await Get(entity.Id);
     }
 
-    public async Task<TReadDto> Update(Guid id, TUpdateDto dto)
+    [HttpPut]
+    [Route("{id:guid}")]
+    public async Task<TReadDto> Update(Guid id, [FromBody] TUpdateDto dto)
     {
         var entity = new TEntity {Id = id};
         DbContext.Set<TEntity>().Attach(entity);
@@ -94,6 +103,8 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return await Get(entity.Id);
     }
 
+    [HttpDelete]
+    [Route("{id:guid}")]
     public async Task<TReadDto> Delete(Guid id)
     {
         var entity = new TEntity {Id = id};
@@ -114,7 +125,8 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<TReadDto>(result);
     }
 
-    public async Task<int> DeleteRange(IEnumerable<Guid> ids)
+    [HttpDelete]
+    public async Task<int> DeleteRange([FromBody] IEnumerable<Guid> ids)
     {
         var entities = ids.Select(id => new TEntity {Id = id}).ToList();
         DbContext.Set<TEntity>().AttachRange(entities);

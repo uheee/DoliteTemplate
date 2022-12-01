@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Roslyn": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\DoliteTemplate.Api\\DoliteTemplate.Api.csproj"
+    }
+  }
+}

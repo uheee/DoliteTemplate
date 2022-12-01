@@ -12,7 +12,7 @@ namespace DoliteTemplate.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("[controller]")]
-public class DeviceController : ControllerBase
+public partial class DeviceExampleController : ControllerBase
 {
     // public IDeviceService DeviceService { get; init; } = null!;
     public ICrudService<Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto> DeviceService { get; init; } = null!;
@@ -67,11 +67,11 @@ public class DeviceController : ControllerBase
     /// <returns></returns>
     [HttpDelete]
     [Route("{id:guid}")]
-    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DeviceReadDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorInfo), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> UpdateDevice(Guid id)
+    public async Task<ActionResult> DeleteDevice(Guid id)
     {
-        await DeviceService.Delete(id);
-        return Ok(true);
+        var result = await DeviceService.Delete(id);
+        return Ok(result);
     }
 }
