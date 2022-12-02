@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices.ComTypes;
 using System.Security.Claims;
 using System.Text;
+using System.Xml;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -67,17 +68,20 @@ public class ControllerGenerator : ISourceGenerator
             ? serviceName.Substring(0, serviceName.Length - serviceSuffix.Length)
             : serviceName;
         controllerName += controllerSuffix;
+        var comments = GetComment(@class);
         var filename = $"{controllerName}.g.cs";
 
 
         var methods = GetAllMembers(@class);
 
-        var methodSources = string.Join(Environment.NewLine, methods.Select(method => GenerateMethod(method, serviceName)));
+        var methodSources = string.Join(Environment.NewLine,
+            methods.Select(method => GenerateMethod(method, serviceName)));
 
         var source =
             $$"""
             namespace DoliteTemplate.Api.Controllers;
 
+            {{comments}}
             [Microsoft.AspNetCore.Mvc.ApiController]
             [Microsoft.AspNetCore.Mvc.Route("[controller]")]
             public partial class {{controllerName}} : Microsoft.AspNetCore.Mvc.ControllerBase
@@ -92,7 +96,6 @@ public class ControllerGenerator : ISourceGenerator
             }
             """;
 
-
         return (filename, source);
     }
 
@@ -106,11 +109,13 @@ public class ControllerGenerator : ISourceGenerator
         var resultType = hasResult ? isAsync ? serviceReturnType.TypeArguments.First().ToDisplayString() : serviceReturnType.ToDisplayString() : string.Empty;
         var returnTypeSource = string.IsNullOrEmpty(resultType) ? string.Empty : $"typeof({resultType}), ";
         var attributes = string.Join(Environment.NewLine, method.GetAttributes().Select(attribute => $"[{attribute}]"));
-        var parameters = method.Parameters.Select(GenerateParameter);
+        var parameters = method.Parameters.Select(GenerateParameter).ToArray();
         var parameterDefinitionSources = string.Join(", ", parameters.Select(tuple => tuple.definition));
         var parameterUsageSources = string.Join(", ", parameters.Select(tuple => tuple.usage));
+        var comments = GetComment(method);
         var source =
             $$"""
+            {{comments}}
             {{attributes}}
             [Microsoft.AspNetCore.Mvc.ProducesResponseType({{returnTypeSource}}Microsoft.AspNetCore.Http.StatusCodes.Status200OK)]
             [Microsoft.AspNetCore.Mvc.ProducesResponseType(typeof(DoliteTemplate.Api.Utils.Error.ErrorInfo), Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest)]
@@ -123,6 +128,7 @@ public class ControllerGenerator : ISourceGenerator
                 return Ok({{(hasResult ? "result" : string.Empty)}});
             }
             """;
+
         return source;
     }
 
@@ -133,22 +139,49 @@ public class ControllerGenerator : ISourceGenerator
         var definition = $"{type} {name}";
         var attributes = string.Join(Environment.NewLine, parameter.GetAttributes().Select(attribute => $"[{attribute}]"));
         if (!string.IsNullOrEmpty(attributes)) definition = $"{attributes} {definition}";
+
         return (definition, name);
     }
 
-    private static IEnumerable<IMethodSymbol> GetAllMembers(INamedTypeSymbol @class)
+    private static IEnumerable<IMethodSymbol> GetAllMembers(ITypeSymbol @class)
     {
-        foreach (var method in @class.GetMembers().OfType<IMethodSymbol>())
-            if (method.Name != ".ctor" && !method.IsStatic && method.DeclaredAccessibility == Accessibility.Public && method.MethodKind == MethodKind.Ordinary && HasHttpMethod(method))
-                yield return method;
-        var baseType = @class.BaseType;
-        if (baseType is not null && @class.ToDisplayString() != "DoliteTemplate.Api.Services.Base.BaseService")
-            foreach (var method in GetAllMembers(baseType))
-                yield return method;
+        while (true)
+        {
+            foreach (var method in @class.GetMembers().OfType<IMethodSymbol>())
+                if (!method.IsStatic &&
+                    method.Name != ".ctor" &&
+                    method.DeclaredAccessibility == Accessibility.Public &&
+                    method.MethodKind == MethodKind.Ordinary &&
+                    HasHttpMethod(method))
+                    yield return method;
+            var baseType = @class.BaseType;
+            if (baseType is not null && @class.ToDisplayString() != "DoliteTemplate.Api.Services.Base.BaseService")
+            {
+                @class = baseType;
+                continue;
+            }
+
+            break;
+        }
     }
 
-    private static bool HasHttpMethod(IMethodSymbol method)
+    private static bool HasHttpMethod(ISymbol method)
     {
-        return method.GetAttributes().Any(attribute => attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == "Microsoft.AspNetCore.Mvc" && attribute.AttributeClass!.Name.StartsWith("Http"));
+        return method.GetAttributes().Any(attribute =>
+            attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == "Microsoft.AspNetCore.Mvc" &&
+            attribute.AttributeClass!.Name.StartsWith("Http"));
+    }
+
+    private static string GetComment(ISymbol symbol)
+    {
+        var memberXml = symbol.GetDocumentationCommentXml();
+        if (string.IsNullOrEmpty(memberXml)) return string.Empty;
+        var xmlDoc = new XmlDocument();
+        xmlDoc.LoadXml(memberXml);
+        var comments = xmlDoc.FirstChild.InnerXml;
+
+        return string.Join(Environment.NewLine,
+            comments.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(comment => $"/// {comment.Trim()}"));
     }
 }

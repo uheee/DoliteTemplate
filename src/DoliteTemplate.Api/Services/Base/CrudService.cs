@@ -14,6 +14,11 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     where TDbContext : DbContext
     where TEntity : BaseEntity, new()
 {
+    /// <summary>
+    /// Get entity by identifier
+    /// </summary>
+    /// <param name="id">Unique identifier</param>
+    /// <returns>An entity</returns>
     [HttpGet]
     [Route("{id:guid}")]
     public async Task<TReadDto> Get(Guid id)
@@ -23,6 +28,10 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<TReadDto>(result);
     }
 
+    /// <summary>
+    /// Get all entities
+    /// </summary>
+    /// <returns>All entites</returns>
     [HttpGet]
     public async Task<IEnumerable<TReadDto>> GetAll()
     {
@@ -31,6 +40,12 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<IEnumerable<TReadDto>>(result);
     }
 
+    /// <summary>
+    /// Get all paginated entities
+    /// </summary>
+    /// <param name="pageIndex">Page index (start from 1)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <returns>All paginated entities</returns>
     [HttpGet]
     [Route("paging")]
     public async Task<PaginatedList<TReadDto>> GetAllPaged(int pageIndex, int pageSize)
@@ -40,6 +55,11 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<PaginatedList<TReadDto>>(result);
     }
 
+    /// <summary>
+    /// Create an entity
+    /// </summary>
+    /// <param name="dto">entity DTO</param>
+    /// <returns>The created entity</returns>
     [HttpPost]
     public async Task<TReadDto> Create([FromBody] TCreateDto dto)
     {
@@ -49,6 +69,12 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return await Get(entity.Id);
     }
 
+    /// <summary>
+    /// Update an entity
+    /// </summary>
+    /// <param name="id">Unique identifier</param>
+    /// <param name="dto">New entity DTO</param>
+    /// <returns>The updated entity</returns>
     [HttpPut]
     [Route("{id:guid}")]
     public async Task<TReadDto> Update(Guid id, [FromBody] TUpdateDto dto)
@@ -60,6 +86,11 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return await Get(entity.Id);
     }
 
+    /// <summary>
+    /// Delete an entity
+    /// </summary>
+    /// <param name="id">Unique identifier</param>
+    /// <returns>The deleted entity</returns>
     [HttpDelete]
     [Route("{id:guid}")]
     public async Task<TReadDto> Delete(Guid id)
@@ -82,6 +113,11 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<TReadDto>(result);
     }
 
+    /// <summary>
+    /// Delete some entities
+    /// </summary>
+    /// <param name="ids">Unique identifiers</param>
+    /// <returns>Count of the deleted entities</returns>
     [HttpDelete]
     public async Task<int> DeleteRange([FromBody] IEnumerable<Guid> ids)
     {
