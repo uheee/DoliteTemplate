@@ -4,6 +4,7 @@ using DoliteTemplate.Api.Utils.Error;
 using DoliteTemplate.Domain.Services.Base;
 using DoliteTemplate.Domain.Utils;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace DoliteTemplate.Api.Services.Base;
 
@@ -39,6 +40,7 @@ public class BaseService<TDbContext> : BaseService, IBaseService where TDbContex
         }
         catch (Exception e)
         {
+            Log.Error(e, "Failed to execute transaction");
             if (DbContextProvider.Transaction is not null)
                 await DbContextProvider.Transaction.RollbackAsync();
             throw;
@@ -57,6 +59,7 @@ public class BaseService<TDbContext> : BaseService, IBaseService where TDbContex
         }
         catch (Exception e)
         {
+            Log.Error(e, "Failed to execute transaction");
             if (DbContextProvider.Transaction is not null)
                 await DbContextProvider.Transaction.RollbackAsync();
             throw;
