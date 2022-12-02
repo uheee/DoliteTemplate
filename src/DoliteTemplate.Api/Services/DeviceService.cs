@@ -8,7 +8,7 @@ using DoliteTemplate.Infrastructure.DbContexts;
 namespace DoliteTemplate.Api.Services;
 
 /// <summary>
-/// Device Service
+///     Device Service
 /// </summary>
 [ApiService]
 public class DeviceService :

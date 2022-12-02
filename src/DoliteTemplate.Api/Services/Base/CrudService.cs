@@ -15,7 +15,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     where TEntity : BaseEntity, new()
 {
     /// <summary>
-    /// Get entity by identifier
+    ///     Get entity by identifier
     /// </summary>
     /// <param name="id">Unique identifier</param>
     /// <returns>An entity</returns>
@@ -29,7 +29,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     }
 
     /// <summary>
-    /// Get all entities
+    ///     Get all entities
     /// </summary>
     /// <returns>All entites</returns>
     [HttpGet]
@@ -41,7 +41,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     }
 
     /// <summary>
-    /// Get all paginated entities
+    ///     Get all paginated entities
     /// </summary>
     /// <param name="pageIndex">Page index (start from 1)</param>
     /// <param name="pageSize">Page size</param>
@@ -56,7 +56,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     }
 
     /// <summary>
-    /// Create an entity
+    ///     Create an entity
     /// </summary>
     /// <param name="dto">entity DTO</param>
     /// <returns>The created entity</returns>
@@ -70,7 +70,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     }
 
     /// <summary>
-    /// Update an entity
+    ///     Update an entity
     /// </summary>
     /// <param name="id">Unique identifier</param>
     /// <param name="dto">New entity DTO</param>
@@ -79,7 +79,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     [Route("{id:guid}")]
     public async Task<TReadDto> Update(Guid id, [FromBody] TUpdateDto dto)
     {
-        var entity = new TEntity {Id = id};
+        var entity = new TEntity { Id = id };
         DbContext.Set<TEntity>().Attach(entity);
         Mapper.Map(dto, entity);
         await DbContext.SaveChangesAsync();
@@ -87,7 +87,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     }
 
     /// <summary>
-    /// Delete an entity
+    ///     Delete an entity
     /// </summary>
     /// <param name="id">Unique identifier</param>
     /// <returns>The deleted entity</returns>
@@ -95,7 +95,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     [Route("{id:guid}")]
     public async Task<TReadDto> Delete(Guid id)
     {
-        var entity = new TEntity {Id = id};
+        var entity = new TEntity { Id = id };
         DbContext.Set<TEntity>().Attach(entity);
         TEntity result;
         switch (entity)
@@ -114,17 +114,17 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     }
 
     /// <summary>
-    /// Delete some entities
+    ///     Delete some entities
     /// </summary>
     /// <param name="ids">Unique identifiers</param>
     /// <returns>Count of the deleted entities</returns>
     [HttpDelete]
     public async Task<int> DeleteRange([FromBody] IEnumerable<Guid> ids)
     {
-        var entities = ids.Select(id => new TEntity {Id = id}).ToList();
+        var entities = ids.Select(id => new TEntity { Id = id }).ToList();
         DbContext.Set<TEntity>().AttachRange(entities);
         if (typeof(TEntity).IsAssignableTo(typeof(ISoftDelete)))
-            entities.ForEach(entity => ((ISoftDelete) entity).Delete());
+            entities.ForEach(entity => ((ISoftDelete)entity).Delete());
         else
             DbContext.Set<TEntity>().RemoveRange(entities);
         var result = await DbContext.SaveChangesAsync();
