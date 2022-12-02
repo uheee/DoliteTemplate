@@ -14,14 +14,14 @@ jobs:
         with:
           nuget-version: '6.x'
 
-      - name: set env
+      - name: Set environment variables
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
-      - name: set version
+      - name: Set version
         run: sed -i 's/${RELEASE_VERSION}/'${{env.RELEASE_VERSION}}'/g' DoliteTemplate.nuspec
 
-      - name: create pkg
+      - name: Create nuget package
         run: nuget pack DoliteTemplate.nuspec -NoDefaultExcludes
         
-      - name: publish pkg
+      - name: Publish nuget package
         run: nuget push *.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_API_KEY}} -SkipDuplicate
