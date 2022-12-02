@@ -1,10 +1,8 @@
 name: Package
 on:
   push:
-    branches:
-      - master
-    paths:
-      - 'DoliteTemplate.nuspec'
+    tags:
+      - '*'
 jobs:
   publish:
     name: Publish to NuGet.org
@@ -16,8 +14,14 @@ jobs:
         with:
           nuget-version: '6.x'
 
-      - name: Create the package
+      - name: set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+      - name: set version
+        run: sed -i 's/${RELEASE_VERSION}/'${{env.RELEASE_VERSION}}'/g' DoliteTemplate.nuspec
+
+      - name: create pkg
         run: nuget pack DoliteTemplate.nuspec -NoDefaultExcludes
         
-      - name: Publish the package
+      - name: publish pkg
         run: nuget push *.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_API_KEY}} -SkipDuplicate
