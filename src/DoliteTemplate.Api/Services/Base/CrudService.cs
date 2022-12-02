@@ -31,41 +31,11 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return Mapper.Map<IEnumerable<TReadDto>>(result);
     }
 
-    public async Task<IEnumerable<TReadDto>> GetWhere(Expression<Func<TEntity, bool>> condition)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .Where(condition).ToArrayAsync();
-        return Mapper.Map<IEnumerable<TReadDto>>(result);
-    }
-
     [HttpGet]
     [Route("paging")]
     public async Task<PaginatedList<TReadDto>> GetAllPaged(int pageIndex, int pageSize)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .ToPagedListAsync(pageIndex, pageSize);
-        return Mapper.Map<PaginatedList<TReadDto>>(result);
-    }
-
-    public async Task<PaginatedList<TReadDto>> GetWherePaged(Expression<Func<TEntity, bool>> condition, int pageIndex,
-        int pageSize)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .Where(condition).ToPagedListAsync(pageIndex, pageSize);
-        return Mapper.Map<PaginatedList<TReadDto>>(result);
-    }
-
-    public async Task<IEnumerable<TReadDto>> Query(QueryOptions<TEntity> queryOptions)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
-            .ToArrayAsync();
-        return Mapper.Map<IEnumerable<TReadDto>>(result);
-    }
-
-    public async Task<PaginatedList<TReadDto>> QueryPaged(QueryOptions<TEntity> queryOptions, int pageIndex,
-        int pageSize)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
             .ToPagedListAsync(pageIndex, pageSize);
         return Mapper.Map<PaginatedList<TReadDto>>(result);
     }
@@ -125,7 +95,39 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         return result;
     }
 
-    public async Task<TReadDto> GetWhereSingle(Expression<Func<TEntity, bool>> condition)
+    #region Query Methods
+
+    public async Task<IEnumerable<TReadDto>> QueryWhere(Expression<Func<TEntity, bool>> condition)
+    {
+        var result = await DbContext.Set<TEntity>().SkipDeleted()
+            .Where(condition).ToArrayAsync();
+        return Mapper.Map<IEnumerable<TReadDto>>(result);
+    }
+
+    public async Task<PaginatedList<TReadDto>> QueryWherePaged(Expression<Func<TEntity, bool>> condition, int pageIndex,
+        int pageSize)
+    {
+        var result = await DbContext.Set<TEntity>().SkipDeleted()
+            .Where(condition).ToPagedListAsync(pageIndex, pageSize);
+        return Mapper.Map<PaginatedList<TReadDto>>(result);
+    }
+
+    public async Task<IEnumerable<TReadDto>> Query(QueryOptions<TEntity> queryOptions)
+    {
+        var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
+            .ToArrayAsync();
+        return Mapper.Map<IEnumerable<TReadDto>>(result);
+    }
+
+    public async Task<PaginatedList<TReadDto>> QueryPaged(QueryOptions<TEntity> queryOptions, int pageIndex,
+        int pageSize)
+    {
+        var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
+            .ToPagedListAsync(pageIndex, pageSize);
+        return Mapper.Map<PaginatedList<TReadDto>>(result);
+    }
+
+    public async Task<TReadDto> QueryWhereSingle(Expression<Func<TEntity, bool>> condition)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
             .SingleOrDefaultAsync(condition);
@@ -138,6 +140,8 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
             .FirstOrDefaultAsync();
         return Mapper.Map<TReadDto>(result);
     }
+
+    #endregion
 }
 
 public class CrudService<TDbContext, TEntity, TReadDto, TCreateUpdateDto> :
