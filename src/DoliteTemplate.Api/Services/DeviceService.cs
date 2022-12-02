@@ -1,5 +1,5 @@
 using DoliteTemplate.Api.Services.Base;
-using DoliteTemplate.Api.Utils.RestApi;
+using DoliteTemplate.Api.Utils;
 using DoliteTemplate.Domain.DTOs;
 using DoliteTemplate.Domain.Entities;
 using DoliteTemplate.Domain.Services;
@@ -10,7 +10,7 @@ namespace DoliteTemplate.Api.Services;
 /// <summary>
 /// Device Service
 /// </summary>
-[GenerateAPI]
+[ApiService]
 public class DeviceService :
     CrudService<ApiDbContext, Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto>,
     IDeviceService

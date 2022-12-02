@@ -21,7 +21,7 @@ public class ControllerGenerator : ISourceGenerator
     {
         // 标记用的Attribute类
         var attributeSymbol =
-            context.Compilation.GetTypeByMetadataName("DoliteTemplate.Api.Utils.RestApi.GenerateAPIAttribute");
+            context.Compilation.GetTypeByMetadataName(ConstSymbols.Types.Project.ApiServiceAttribute);
 
         // 筛选有Attribute的类的树
         var trees = context.Compilation.SyntaxTrees
@@ -42,9 +42,9 @@ public class ControllerGenerator : ISourceGenerator
             {
                 var attributes = classDeclaration.DescendantNodes().OfType<AttributeSyntax>();
                 // 判断是否需要生成API Controller
-                var generateApi = attributes.Any(attribute =>
+                var requireGenerating = attributes.Any(attribute =>
                     semanticModel.GetTypeInfo(attribute).Type?.Name == attributeSymbol!.Name);
-                if (!generateApi) continue;
+                if (!requireGenerating) continue;
 
                 var serviceClass = semanticModel.GetDeclaredSymbol(classDeclaration);
                 if (serviceClass is null) continue;
@@ -58,16 +58,14 @@ public class ControllerGenerator : ISourceGenerator
     /// 生成API Controller
     /// </summary>
     /// <param name="class"></param>
-    private static (string, string) GenerateController(INamedTypeSymbol @class)
+    private static (string, string) GenerateController(ITypeSymbol @class)
     {
         var serviceName = @class.Name;
         var serviceFullName = @class.ToDisplayString();
-        const string serviceSuffix = "Service";
-        const string controllerSuffix = "Controller";
-        var controllerName = serviceName.EndsWith(serviceSuffix)
-            ? serviceName.Substring(0, serviceName.Length - serviceSuffix.Length)
+        var controllerName = serviceName.EndsWith(ConstSymbols.Suffixes.Service)
+            ? serviceName.Substring(0, serviceName.Length - ConstSymbols.Suffixes.Service.Length)
             : serviceName;
-        controllerName += controllerSuffix;
+        controllerName += ConstSymbols.Suffixes.Controller;
         var comments = GetComment(@class);
         var filename = $"{controllerName}.g.cs";
 
@@ -79,12 +77,12 @@ public class ControllerGenerator : ISourceGenerator
 
         var source =
             $$"""
-            namespace DoliteTemplate.Api.Controllers;
+            namespace {{ConstSymbols.Namespaces.Project.Controllers}};
 
             {{comments}}
-            [Microsoft.AspNetCore.Mvc.ApiController]
-            [Microsoft.AspNetCore.Mvc.Route("[controller]")]
-            public partial class {{controllerName}} : Microsoft.AspNetCore.Mvc.ControllerBase
+            [{{ConstSymbols.Types.System.ApiControllerAttribute}}]
+            [{{ConstSymbols.Types.System.RouteAttribute}}("[controller]")]
+            public partial class {{controllerName}} : {{ConstSymbols.Types.System.ControllerBase}}
             {
                 private readonly {{serviceFullName}} _{{serviceName}}; 
                 public {{controllerName}}({{serviceFullName}} {{serviceName}})
@@ -103,10 +101,15 @@ public class ControllerGenerator : ISourceGenerator
     {
         
         var serviceReturnType = (method.ReturnType as INamedTypeSymbol)!;
-        var isAsync = serviceReturnType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks" && serviceReturnType.MetadataName.StartsWith("Task");
-        var returnType = isAsync ? "System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.ActionResult>" : "Microsoft.AspNetCore.Mvc.ActionResult";
+        var isAsync = serviceReturnType.ContainingNamespace.ToDisplayString() == ConstSymbols.Namespaces.System.Tasks &&
+                      serviceReturnType.MetadataName.StartsWith("Task");
+        var returnType = isAsync
+            ? $"{ConstSymbols.Types.System.Task}<{ConstSymbols.Types.System.ActionResult}>"
+            : ConstSymbols.Types.System.ActionResult;
         var hasResult = isAsync ? serviceReturnType.TypeArguments.Any() : serviceReturnType.ToDisplayString() != "void";
-        var resultType = hasResult ? isAsync ? serviceReturnType.TypeArguments.First().ToDisplayString() : serviceReturnType.ToDisplayString() : string.Empty;
+        var resultType = hasResult
+            ? isAsync ? serviceReturnType.TypeArguments.First().ToDisplayString() : serviceReturnType.ToDisplayString()
+            : string.Empty;
         var returnTypeSource = string.IsNullOrEmpty(resultType) ? string.Empty : $"typeof({resultType}), ";
         var attributes = string.Join(Environment.NewLine, method.GetAttributes().Select(attribute => $"[{attribute}]"));
         var parameters = method.Parameters.Select(GenerateParameter).ToArray();
@@ -117,8 +120,8 @@ public class ControllerGenerator : ISourceGenerator
             $$"""
             {{comments}}
             {{attributes}}
-            [Microsoft.AspNetCore.Mvc.ProducesResponseType({{returnTypeSource}}Microsoft.AspNetCore.Http.StatusCodes.Status200OK)]
-            [Microsoft.AspNetCore.Mvc.ProducesResponseType(typeof(DoliteTemplate.Api.Utils.Error.ErrorInfo), Microsoft.AspNetCore.Http.StatusCodes.Status400BadRequest)]
+            [{{ConstSymbols.Types.System.ProducesResponseTypeAttribute}}({{returnTypeSource}}{{ConstSymbols.Types.System.StatusCodes}}.Status200OK)]
+            [{{ConstSymbols.Types.System.ProducesResponseTypeAttribute}}(typeof({{ConstSymbols.Types.Project.ErrorInfo}}), {{ConstSymbols.Types.System.StatusCodes}}.Status400BadRequest)]
             {{method.DeclaredAccessibility.ToString().ToLower()}} {{(isAsync ? "async " : string.Empty)}}{{returnType}} {{method.Name}}(
                 {{parameterDefinitionSources}})
             {
@@ -137,7 +140,8 @@ public class ControllerGenerator : ISourceGenerator
         var type = parameter.Type.ToDisplayString();
         var name = parameter.Name;
         var definition = $"{type} {name}";
-        var attributes = string.Join(Environment.NewLine, parameter.GetAttributes().Select(attribute => $"[{attribute}]"));
+        var attributes = string.Join(Environment.NewLine,
+            parameter.GetAttributes().Select(attribute => $"[{attribute}]"));
         if (!string.IsNullOrEmpty(attributes)) definition = $"{attributes} {definition}";
 
         return (definition, name);
@@ -155,7 +159,7 @@ public class ControllerGenerator : ISourceGenerator
                     HasHttpMethod(method))
                     yield return method;
             var baseType = @class.BaseType;
-            if (baseType is not null && @class.ToDisplayString() != "DoliteTemplate.Api.Services.Base.BaseService")
+            if (baseType is not null && @class.ToDisplayString() != ConstSymbols.Types.Project.BaseService)
             {
                 @class = baseType;
                 continue;
@@ -168,7 +172,7 @@ public class ControllerGenerator : ISourceGenerator
     private static bool HasHttpMethod(ISymbol method)
     {
         return method.GetAttributes().Any(attribute =>
-            attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == "Microsoft.AspNetCore.Mvc" &&
+            attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == ConstSymbols.Namespaces.System.Mvc &&
             attribute.AttributeClass!.Name.StartsWith("Http"));
     }
 
