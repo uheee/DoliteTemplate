@@ -12,7 +12,7 @@ namespace DoliteTemplate.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("[controller]")]
-public partial class DeviceExampleController : ControllerBase
+public class DeviceExampleController : ControllerBase
 {
     // public IDeviceService DeviceService { get; init; } = null!;
     public ICrudService<Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto> DeviceService { get; init; } = null!;
@@ -22,11 +22,11 @@ public partial class DeviceExampleController : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedList<DeviceReadDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PaginatedList<DeviceReadDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorInfo), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> GetPagingDevices(int index = 1, int pageSize = 10)
+    public async Task<ActionResult> GetPagingDevices(int pageIndex = 1, int pageSize = 10)
     {
-        var result = await DeviceService.GetAllPaged(index, pageSize);
+        var result = await DeviceService.GetAllPaged(pageIndex, pageSize);
         return Ok(result);
     }
 

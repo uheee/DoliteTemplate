@@ -63,17 +63,17 @@ public class BaseService<TDbContext> : BaseService, IBaseService where TDbContex
         }
     }
 
-    public async Task<PagedList<TEntity>> PagingQuery<TEntity>(Func<TDbContext, IQueryable<TEntity>> query, int index,
-        int pageSize)
+    public async Task<PaginatedList<TEntity>> PagingQuery<TEntity>(Func<TDbContext, IQueryable<TEntity>> query,
+        int pageIndex, int pageSize)
     {
-        if (index < 1) return PagedList<TEntity>.Empty(index, pageSize);
+        if (pageIndex < 1) return PaginatedList<TEntity>.Empty(pageIndex, pageSize);
         return await UseTransaction(async provider =>
         {
-            var itemCount = query(await provider.GetDbContext()).LongCountAsync();
-            var items = query(await provider.GetDbContext()).Skip(pageSize * (index - 1)).Take(pageSize)
+            var count = query(await provider.GetDbContext()).LongCountAsync();
+            var items = query(await provider.GetDbContext()).Skip(pageSize * (pageIndex - 1)).Take(pageSize)
                 .ToArrayAsync();
-            await Task.WhenAll(itemCount, items);
-            return new PagedList<TEntity>(await items, await itemCount, index, pageSize);
+            await Task.WhenAll(count, items);
+            return new PaginatedList<TEntity>(await items, await count, pageIndex, pageSize);
         });
     }
 }

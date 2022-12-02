@@ -10,10 +10,10 @@ public interface ICrudService<TEntity, TReadDto, in TCreateDto, in TUpdateDto>
     Task<TReadDto> Get(Guid id);
     Task<IEnumerable<TReadDto>> GetAll();
     Task<IEnumerable<TReadDto>> GetWhere(Expression<Func<TEntity, bool>> condition);
-    Task<PagedList<TReadDto>> GetAllPaged(int index, int pageSize);
-    Task<PagedList<TReadDto>> GetWherePaged(Expression<Func<TEntity, bool>> condition, int index, int pageSize);
+    Task<PaginatedList<TReadDto>> GetAllPaged(int pageIndex, int pageSize);
+    Task<PaginatedList<TReadDto>> GetWherePaged(Expression<Func<TEntity, bool>> condition, int pageIndex, int pageSize);
     Task<IEnumerable<TReadDto>> Query(QueryOptions<TEntity> queryOptions);
-    Task<PagedList<TReadDto>> QueryPaged(QueryOptions<TEntity> queryOptions, int index, int pageSize);
+    Task<PaginatedList<TReadDto>> QueryPaged(QueryOptions<TEntity> queryOptions, int pageIndex, int pageSize);
     Task<TReadDto> Create(TCreateDto dto);
     Task<TReadDto> Update(Guid id, TUpdateDto dto);
     Task<TReadDto> Delete(Guid id);

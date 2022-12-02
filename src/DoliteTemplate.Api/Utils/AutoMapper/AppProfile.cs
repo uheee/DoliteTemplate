@@ -9,7 +9,7 @@ public class AppProfile : Profile
 {
     public AppProfile()
     {
-        CreateMap(typeof(PagedList<>), typeof(PagedList<>)).ConvertUsing(typeof(PageConverter<,>));
+        CreateMap(typeof(PaginatedList<>), typeof(PaginatedList<>)).ConvertUsing(typeof(PageConverter<,>));
         CreateMap<Device, DeviceReadDto>();
         CreateMap<DeviceCreateDto, Device>();
         CreateMap<DeviceUpdateDto, Device>()
@@ -17,13 +17,15 @@ public class AppProfile : Profile
         // Set custom mappers
     }
 
-    private class PageConverter<TSource, TDestination> : ITypeConverter<PagedList<TSource>, PagedList<TDestination>>
+    private class
+        PageConverter<TSource, TDestination> : ITypeConverter<PaginatedList<TSource>, PaginatedList<TDestination>>
     {
-        public PagedList<TDestination> Convert(PagedList<TSource> source, PagedList<TDestination> destination,
+        public PaginatedList<TDestination> Convert(PaginatedList<TSource> source,
+            PaginatedList<TDestination> destination,
             ResolutionContext context)
         {
             var items = context.Mapper.Map<IEnumerable<TDestination>>(source.Content);
-            return new PagedList<TDestination>(items, source.ItemCount, source.Index, source.PageSize);
+            return new PaginatedList<TDestination>(items, source.Count, source.PageIndex, source.PageSize);
         }
     }
 }

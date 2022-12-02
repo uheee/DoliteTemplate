@@ -6,23 +6,24 @@ namespace DoliteTemplate.Infrastructure.Utils;
 
 public static class LinqExtensions
 {
-    public static PagedList<TEntity> ToPagedList<TEntity>(this IQueryable<TEntity> queryable, int index, int pageSize)
+    public static PaginatedList<TEntity> ToPagedList<TEntity>(this IQueryable<TEntity> queryable, int pageIndex,
+        int pageSize)
     {
-        if (index < 1) return PagedList<TEntity>.Empty(index, pageSize);
-        var itemCount = queryable.LongCount();
-        var items = queryable.Skip(pageSize * (index - 1)).Take(pageSize)
+        if (pageIndex < 1) return PaginatedList<TEntity>.Empty(pageIndex, pageSize);
+        var count = queryable.LongCount();
+        var items = queryable.Skip(pageSize * (pageIndex - 1)).Take(pageSize)
             .ToArray();
-        return new PagedList<TEntity>(items, itemCount, index, pageSize);
+        return new PaginatedList<TEntity>(items, count, pageIndex, pageSize);
     }
 
-    public static async Task<PagedList<TEntity>> ToPagedListAsync<TEntity>(this IQueryable<TEntity> queryable,
-        int index, int pageSize)
+    public static async Task<PaginatedList<TEntity>> ToPagedListAsync<TEntity>(this IQueryable<TEntity> queryable,
+        int pageIndex, int pageSize)
     {
-        if (index < 1) return PagedList<TEntity>.Empty(index, pageSize);
-        var itemCount = await queryable.LongCountAsync();
-        var items = await queryable.Skip(pageSize * (index - 1)).Take(pageSize)
+        if (pageIndex < 1) return PaginatedList<TEntity>.Empty(pageIndex, pageSize);
+        var count = await queryable.LongCountAsync();
+        var items = await queryable.Skip(pageSize * (pageIndex - 1)).Take(pageSize)
             .ToArrayAsync();
-        return new PagedList<TEntity>(items, itemCount, index, pageSize);
+        return new PaginatedList<TEntity>(items, count, pageIndex, pageSize);
     }
 
     public static IQueryable<TEntity> SkipDeleted<TEntity>(this IQueryable<TEntity> query)
