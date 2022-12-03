@@ -28,7 +28,9 @@ public static class ConstSymbols
             public const string StatusCodes = $"{Namespaces.System.Http}.StatusCodes";
             public const string ApiControllerAttribute = $"{Namespaces.System.Mvc}.ApiControllerAttribute";
             public const string RouteAttribute = $"{Namespaces.System.Mvc}.RouteAttribute";
-            public const string ProducesResponseTypeAttribute = $"{Namespaces.System.Mvc}.ProducesResponseTypeAttribute";
+
+            public const string ProducesResponseTypeAttribute =
+                $"{Namespaces.System.Mvc}.ProducesResponseTypeAttribute";
         }
 
         public static class Project
@@ -43,5 +45,10 @@ public static class ConstSymbols
     {
         public const string Controller = "Controller";
         public const string Service = "Service";
+    }
+
+    public static class Codes
+    {
+        public const string Ident = "    ";
     }
 }
