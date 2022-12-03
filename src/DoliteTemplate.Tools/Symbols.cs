@@ -1,6 +1,9 @@
-﻿namespace DoliteTemplate.Tools;
+﻿using System.Text;
+using Microsoft.CodeAnalysis;
 
-public static class ConstSymbols
+namespace DoliteTemplate.Tools;
+
+public static class Symbols
 {
     public static class Namespaces
     {
@@ -20,6 +23,25 @@ public static class ConstSymbols
 
     public static class Types
     {
+        public static string BuildAttribute(AttributeData attributeData)
+        {
+            return $"[{attributeData}]";
+        }
+
+        public static string BuildAttribute(string typename, params string[] @params)
+        {
+            var builder = new StringBuilder("[$attr($params)]");
+            builder.Replace("$attr", typename);
+            var parameters = string.Join(", ", @params);
+            builder.Replace("$params", parameters);
+            return builder.ToString();
+        }
+
+        public static string BuildTypeOf(string typename)
+        {
+            return $"typeof({typename})";
+        }
+
         public static class System
         {
             public const string Task = $"{Namespaces.System.Tasks}.Task";

@@ -10,6 +10,33 @@ namespace DoliteTemplate.Tools;
 [Generator]
 public class ControllerGenerator : ISourceGenerator
 {
+    private static readonly IEnumerable<string> ControllerIgnoreAttributes = new[]
+    {
+        Symbols.Types.Project.ApiServiceAttribute
+    };
+
+    private static readonly Dictionary<string, string> ControllerDefaultAttributes = new()
+    {
+        {
+            Symbols.Types.System.ApiControllerAttribute,
+            Symbols.Types.BuildAttribute(Symbols.Types.System.ApiControllerAttribute)
+        },
+        {
+            Symbols.Types.System.RouteAttribute,
+            Symbols.Types.BuildAttribute(Symbols.Types.System.RouteAttribute, "\"[controller]\"")
+        }
+    };
+
+    private static readonly IEnumerable<string> MethodDefaultResponseTypeAttributes = new[]
+    {
+        Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
+            Symbols.Types.BuildTypeOf("{0}"),
+            $"{Symbols.Types.System.StatusCodes}.Status200OK"),
+        Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
+            Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
+            $"{Symbols.Types.System.StatusCodes}.Status400BadRequest")
+    };
+
     public void Initialize(GeneratorInitializationContext context)
     {
     }
@@ -36,7 +63,7 @@ public class ControllerGenerator : ISourceGenerator
                 var @class = semanticModel.GetDeclaredSymbol(classDeclaration);
                 if (@class is null) continue;
                 if (!@class.GetAttributes().Any(attribute =>
-                        attribute.AttributeClass!.ToDisplayString() == ConstSymbols.Types.Project.ApiServiceAttribute))
+                        attribute.AttributeClass!.ToDisplayString() == Symbols.Types.Project.ApiServiceAttribute))
                     continue;
                 var sourceBuilder = new StringBuilder();
                 var filename = GenerateController(sourceBuilder, @class);
@@ -53,41 +80,47 @@ public class ControllerGenerator : ISourceGenerator
         var entityName =
             (string?)@class.GetAttributes()
                 .Single(attribute => attribute.AttributeClass!.ToDisplayString() ==
-                                     ConstSymbols.Types.Project.ApiServiceAttribute).ConstructorArguments
-                .FirstOrDefault().Value ?? GetNameExcludingSuffix(serviceName, ConstSymbols.Suffixes.Service);
-        var controllerName = entityName + ConstSymbols.Suffixes.Controller;
+                                     Symbols.Types.Project.ApiServiceAttribute).ConstructorArguments
+                .FirstOrDefault().Value ?? GetNameExcludingSuffix(serviceName, Symbols.Suffixes.Service);
+        var controllerName = entityName + Symbols.Suffixes.Controller;
         var filename = $"{controllerName}.g.cs";
 
         // Namespace
-        builder.AppendLine($"namespace {ConstSymbols.Namespaces.Project.Controllers};");
+        builder.AppendLine($"namespace {Symbols.Namespaces.Project.Controllers};");
         builder.AppendLine();
 
         // Class comments
         GenerateComments(builder, @class, 0);
 
-        // ApiController
-        builder.AppendLine($"[{ConstSymbols.Types.System.ApiControllerAttribute}]");
-
-        // Route
-        builder.AppendLine($"[{ConstSymbols.Types.System.RouteAttribute}(\"[controller]\")]");
+        // Class attributes
+        var attributes = @class.GetAttributes().Where(attribute =>
+            !ControllerIgnoreAttributes.Contains(attribute.AttributeClass!.ToDisplayString()));
+        var attributeLines = attributes.Select(Symbols.Types.BuildAttribute);
+        foreach (var attribute in attributeLines)
+            builder.AppendLine(attribute);
+        var defaultAttributeLines = ControllerDefaultAttributes.Keys
+            .Except(attributes.Select(attribute => attribute.AttributeClass!.ToDisplayString()))
+            .Select(key => ControllerDefaultAttributes[key]);
+        foreach (var attribute in defaultAttributeLines)
+            builder.AppendLine(attribute);
 
         // Class header
-        builder.AppendLine($"public partial class {controllerName} : {ConstSymbols.Types.System.ControllerBase}");
+        builder.AppendLine($"public partial class {controllerName} : {Symbols.Types.System.ControllerBase}");
         builder.AppendLine("{");
 
         // Service member
         var serviceMemberName = $"_{serviceName}";
-        builder.Append(ConstSymbols.Codes.Ident)
+        builder.Append(Symbols.Codes.Ident)
             .AppendLine($"private readonly {serviceFullName} {serviceMemberName};")
             .AppendLine();
 
         // Constructor
-        builder.Append(ConstSymbols.Codes.Ident)
+        builder.Append(Symbols.Codes.Ident)
             .AppendLine($"public {controllerName}({serviceFullName} {serviceName})");
-        builder.Append(ConstSymbols.Codes.Ident).AppendLine("{");
-        builder.Append(ConstSymbols.Codes.Ident).Append(ConstSymbols.Codes.Ident)
+        builder.Append(Symbols.Codes.Ident).AppendLine("{");
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
             .AppendLine($"_{serviceName} = {serviceName};");
-        builder.Append(ConstSymbols.Codes.Ident).AppendLine("}").AppendLine();
+        builder.Append(Symbols.Codes.Ident).AppendLine("}").AppendLine();
 
         // Methods
         var methods = GetAllMembers(@class);
@@ -105,7 +138,7 @@ public class ControllerGenerator : ISourceGenerator
     private static void GenerateMethod(StringBuilder builder, IMethodSymbol method, string serviceMemberName)
     {
         var serviceReturnType = (method.ReturnType as INamedTypeSymbol)!;
-        var isAsync = serviceReturnType.ContainingNamespace.ToDisplayString() == ConstSymbols.Namespaces.System.Tasks &&
+        var isAsync = serviceReturnType.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.System.Tasks &&
                       serviceReturnType.MetadataName.StartsWith("Task");
         var hasResult = isAsync ? serviceReturnType.TypeArguments.Any() : serviceReturnType.ToDisplayString() != "void";
         var resultType = hasResult
@@ -116,36 +149,23 @@ public class ControllerGenerator : ISourceGenerator
         GenerateComments(builder, method, 1);
 
         // Method attributes
-        foreach (var attribute in method.GetAttributes())
-            builder.Append(ConstSymbols.Codes.Ident).AppendLine($"[{attribute}]");
-
-        // 200 OK
-        builder.Append(ConstSymbols.Codes.Ident)
-            .Append("[")
-            .Append(ConstSymbols.Types.System.ProducesResponseTypeAttribute)
-            .Append($"(typeof({resultType}), {ConstSymbols.Types.System.StatusCodes}.Status200OK)")
-            .Append("]")
-            .AppendLine();
-
-        // 400 Bad Request
-        builder.Append(ConstSymbols.Codes.Ident)
-            .Append("[")
-            .Append(ConstSymbols.Types.System.ProducesResponseTypeAttribute)
-            .Append(
-                $"(typeof({ConstSymbols.Types.Project.ErrorInfo}), {ConstSymbols.Types.System.StatusCodes}.Status400BadRequest)")
-            .Append("]")
-            .AppendLine();
+        var attributes = method.GetAttributes();
+        var attributeLines = attributes.Select(Symbols.Types.BuildAttribute);
+        foreach (var attribute in attributeLines)
+            builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
+        foreach (var attribute in MethodDefaultResponseTypeAttributes)
+            builder.Append(Symbols.Codes.Ident).AppendFormat(attribute, resultType).AppendLine();
 
         // Accessibility
-        builder.Append(ConstSymbols.Codes.Ident)
+        builder.Append(Symbols.Codes.Ident)
             .AppendFormat("{0} ", method.DeclaredAccessibility.ToString().ToLower());
 
         // Is async
         if (isAsync)
-            builder.AppendFormat("async {0}<{1}> ", ConstSymbols.Types.System.Task,
-                ConstSymbols.Types.System.ActionResult);
+            builder.AppendFormat("async {0}<{1}> ", Symbols.Types.System.Task,
+                Symbols.Types.System.ActionResult);
         else
-            builder.AppendFormat("{0} ", ConstSymbols.Types.System.ActionResult);
+            builder.AppendFormat("{0} ", Symbols.Types.System.ActionResult);
         // Method name
         builder.Append(method.Name);
 
@@ -162,8 +182,8 @@ public class ControllerGenerator : ISourceGenerator
         builder.AppendLine(")");
 
         // Method body
-        builder.Append(ConstSymbols.Codes.Ident).AppendLine("{");
-        builder.Append(ConstSymbols.Codes.Ident).Append(ConstSymbols.Codes.Ident);
+        builder.Append(Symbols.Codes.Ident).AppendLine("{");
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
         if (hasResult) builder.Append("var result = ");
         if (isAsync) builder.Append("await ");
         builder.AppendFormat("{0}.{1}", serviceMemberName, method.Name);
@@ -181,29 +201,29 @@ public class ControllerGenerator : ISourceGenerator
         builder.AppendLine(");").AppendLine();
 
         // Return
-        builder.Append(ConstSymbols.Codes.Ident).Append(ConstSymbols.Codes.Ident).Append("return Ok(");
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident).Append("return Ok(");
         if (hasResult) builder.Append("result");
         builder.AppendLine(");");
 
-        builder.Append(ConstSymbols.Codes.Ident).AppendLine("}");
+        builder.Append(Symbols.Codes.Ident).AppendLine("}");
     }
 
     private static void GenerateParameterDefinition(StringBuilder builder, IParameterSymbol parameter)
     {
         foreach (var attribute in parameter.GetAttributes())
-            builder.Append(ConstSymbols.Codes.Ident)
-                .Append(ConstSymbols.Codes.Ident)
+            builder.Append(Symbols.Codes.Ident)
+                .Append(Symbols.Codes.Ident)
                 .AppendLine($"[{attribute}]");
-        builder.Append(ConstSymbols.Codes.Ident)
-            .Append(ConstSymbols.Codes.Ident)
+        builder.Append(Symbols.Codes.Ident)
+            .Append(Symbols.Codes.Ident)
             .AppendFormat("{0} {1}", parameter.Type.ToDisplayString(), parameter.Name);
     }
 
     private static void GenerateParameterUsage(StringBuilder builder, IParameterSymbol parameter)
     {
-        builder.Append(ConstSymbols.Codes.Ident)
-            .Append(ConstSymbols.Codes.Ident)
-            .Append(ConstSymbols.Codes.Ident)
+        builder.Append(Symbols.Codes.Ident)
+            .Append(Symbols.Codes.Ident)
+            .Append(Symbols.Codes.Ident)
             .Append(parameter.Name);
     }
 
@@ -220,7 +240,7 @@ public class ControllerGenerator : ISourceGenerator
             foreach (var nodeLine in nodeLines)
             {
                 foreach (var _ in Enumerable.Range(0, indentLevel))
-                    builder.Append(ConstSymbols.Codes.Ident);
+                    builder.Append(Symbols.Codes.Ident);
                 builder.AppendFormat("/// {0}", nodeLine.Trim()).AppendLine();
             }
         }
@@ -245,7 +265,7 @@ public class ControllerGenerator : ISourceGenerator
                     HasHttpMethod(method))
                     yield return method;
             var baseType = @class.BaseType;
-            if (baseType is not null && @class.ToDisplayString() != ConstSymbols.Types.Project.BaseService)
+            if (baseType is not null && @class.ToDisplayString() != Symbols.Types.Project.BaseService)
             {
                 @class = baseType;
                 continue;
@@ -258,7 +278,7 @@ public class ControllerGenerator : ISourceGenerator
     private static bool HasHttpMethod(ISymbol method)
     {
         return method.GetAttributes().Any(attribute =>
-            attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == ConstSymbols.Namespaces.System.Mvc &&
+            attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.System.Mvc &&
             attribute.AttributeClass!.Name.StartsWith("Http"));
     }
 }
