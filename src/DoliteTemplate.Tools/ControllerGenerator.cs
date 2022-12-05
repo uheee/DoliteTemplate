@@ -94,7 +94,7 @@ public class ControllerGenerator : ISourceGenerator
 
         // Class attributes
         var attributes = @class.GetAttributes().Where(attribute =>
-            !ControllerIgnoreAttributes.Contains(attribute.AttributeClass!.ToDisplayString()));
+            !ControllerIgnoreAttributes.Contains(attribute.AttributeClass!.ToDisplayString())).ToArray();
         var attributeLines = attributes.Select(Symbols.Types.BuildAttribute);
         foreach (var attribute in attributeLines)
             builder.AppendLine(attribute);
@@ -141,9 +141,21 @@ public class ControllerGenerator : ISourceGenerator
         var isAsync = serviceReturnType.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.System.Tasks &&
                       serviceReturnType.MetadataName.StartsWith("Task");
         var hasResult = isAsync ? serviceReturnType.TypeArguments.Any() : serviceReturnType.ToDisplayString() != "void";
-        var resultType = hasResult
-            ? isAsync ? serviceReturnType.TypeArguments.First().ToDisplayString() : serviceReturnType.ToDisplayString()
-            : string.Empty;
+        var resultType = string.Empty;
+        if (hasResult)
+        {
+            if (isAsync)
+            {
+                var arg = serviceReturnType.TypeArguments.First();
+                resultType = arg.NullableAnnotation == NullableAnnotation.Annotated
+                    ? arg.OriginalDefinition.ToDisplayString()
+                    : arg.ToDisplayString();
+            }
+            else
+            {
+                resultType = serviceReturnType.ToDisplayString();
+            }
+        }
 
         // Method comments
         GenerateComments(builder, method, 1);
