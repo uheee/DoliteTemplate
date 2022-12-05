@@ -12,10 +12,8 @@ public class DbModule : Module
         var connectionString = GlobalDefinitions.Configuration.GetConnectionString(GlobalDefinitions.ConnectionString);
         if (connectionString is null)
             throw new Exception($"missing connection string '{GlobalDefinitions.ConnectionString}'");
-        var dataSource = NpgsqlDataSource.Create(connectionString);
-        builder.RegisterInstance(dataSource).As<DbDataSource>().SingleInstance();
-        builder.Register(context => new ApiDbContext(context.Resolve<DbDataSource>())).AsSelf();
-        builder.Register(context => context.Resolve<DbDataSource>().OpenConnection()).As<DbConnection>()
+        builder.Register(_ => new ApiDbContext(connectionString)).AsSelf();
+        builder.Register(_ => NpgsqlDataSource.Create(connectionString).OpenConnection()).As<DbConnection>()
             .InstancePerLifetimeScope();
         builder.Register(context => context.Resolve<DbConnection>().BeginTransaction()).As<DbTransaction>();
         builder.RegisterGeneric(typeof(DbContextProvider<>)).AsSelf().PropertiesAutowired();

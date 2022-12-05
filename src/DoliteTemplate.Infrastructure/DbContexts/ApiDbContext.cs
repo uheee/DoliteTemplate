@@ -8,16 +8,16 @@ namespace DoliteTemplate.Infrastructure.DbContexts;
 public class ApiDbContext : DbContext
 {
     private readonly DbConnection? _connection;
-    private readonly DbDataSource? _dataSource;
-
-    public ApiDbContext(DbDataSource dataSource)
-    {
-        _dataSource = dataSource;
-    }
+    private readonly string? _connectionString;
 
     public ApiDbContext(DbConnection connection)
     {
         _connection = connection;
+    }
+
+    public ApiDbContext(string connectionString)
+    {
+        _connectionString = connectionString;
     }
 
     [ActivatorUtilitiesConstructor]
@@ -31,9 +31,8 @@ public class ApiDbContext : DbContext
     {
         if (builder.IsConfigured) return;
 
-        if (_connection is not null)
-            builder.UseNpgsql(_connection);
-        else if (_dataSource is not null) builder.UseNpgsql(_dataSource.ConnectionString);
+        if (_connection is not null) builder.UseNpgsql(_connection);
+        else if (_connectionString is not null) builder.UseNpgsql(_connectionString);
 
         builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }
