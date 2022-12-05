@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using DoliteTemplate.Domain.Entities.Base;
 using DoliteTemplate.Domain.Services.Base;
 using DoliteTemplate.Domain.Utils;
@@ -21,10 +20,10 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     /// <returns>An entity</returns>
     [HttpGet]
     [Route("{id:guid}")]
-    public async Task<TReadDto> Get(Guid id)
+    public async Task<TReadDto?> Get(Guid id)
     {
         var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .SingleAsync(entity => entity.Id == id);
+            .SingleOrDefaultAsync(entity => entity.Id == id);
         return Mapper.Map<TReadDto>(result);
     }
 
@@ -61,7 +60,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     /// <param name="dto">entity DTO</param>
     /// <returns>The created entity</returns>
     [HttpPost]
-    public async Task<TReadDto> Create([FromBody] TCreateDto dto)
+    public async Task<TReadDto?> Create([FromBody] TCreateDto dto)
     {
         var entity = Mapper.Map<TEntity>(dto);
         DbContext.Set<TEntity>().Add(entity);
@@ -77,7 +76,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     /// <returns>The updated entity</returns>
     [HttpPut]
     [Route("{id:guid}")]
-    public async Task<TReadDto> Update(Guid id, [FromBody] TUpdateDto dto)
+    public async Task<TReadDto?> Update(Guid id, [FromBody] TUpdateDto dto)
     {
         var entity = new TEntity { Id = id };
         DbContext.Set<TEntity>().Attach(entity);
@@ -130,54 +129,6 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
         var result = await DbContext.SaveChangesAsync();
         return result;
     }
-
-    #region Query Methods
-
-    public async Task<IEnumerable<TReadDto>> QueryWhere(Expression<Func<TEntity, bool>> condition)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .Where(condition).ToArrayAsync();
-        return Mapper.Map<IEnumerable<TReadDto>>(result);
-    }
-
-    public async Task<PaginatedList<TReadDto>> QueryWherePaged(Expression<Func<TEntity, bool>> condition, int pageIndex,
-        int pageSize)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .Where(condition).ToPagedListAsync(pageIndex, pageSize);
-        return Mapper.Map<PaginatedList<TReadDto>>(result);
-    }
-
-    public async Task<IEnumerable<TReadDto>> Query(QueryOptions<TEntity> queryOptions)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
-            .ToArrayAsync();
-        return Mapper.Map<IEnumerable<TReadDto>>(result);
-    }
-
-    public async Task<PaginatedList<TReadDto>> QueryPaged(QueryOptions<TEntity> queryOptions, int pageIndex,
-        int pageSize)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
-            .ToPagedListAsync(pageIndex, pageSize);
-        return Mapper.Map<PaginatedList<TReadDto>>(result);
-    }
-
-    public async Task<TReadDto> QueryWhereSingle(Expression<Func<TEntity, bool>> condition)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .SingleOrDefaultAsync(condition);
-        return Mapper.Map<TReadDto>(result);
-    }
-
-    public async Task<TReadDto> QuerySingle(QueryOptions<TEntity> queryOptions)
-    {
-        var result = await DbContext.Set<TEntity>().SkipDeleted().QueryBy(queryOptions)
-            .FirstOrDefaultAsync();
-        return Mapper.Map<TReadDto>(result);
-    }
-
-    #endregion
 }
 
 public class CrudService<TDbContext, TEntity, TReadDto, TCreateUpdateDto> :
