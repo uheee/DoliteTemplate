@@ -3,14 +3,6 @@
 [AttributeUsage(AttributeTargets.Class)]
 public class ApiServiceAttribute : Attribute
 {
-    public ApiServiceAttribute()
-    {
-    }
-
-    public ApiServiceAttribute(string tag)
-    {
-        Tag = tag;
-    }
-
     public string? Tag { get; init; }
+    public string Rule { get; init; } = ".*";
 }

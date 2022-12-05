@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -77,11 +78,22 @@ public class ControllerGenerator : ISourceGenerator
     {
         var serviceName = @class.Name;
         var serviceFullName = @class.ToDisplayString();
-        var entityName =
-            (string?)@class.GetAttributes()
-                .Single(attribute => attribute.AttributeClass!.ToDisplayString() ==
-                                     Symbols.Types.Project.ApiServiceAttribute).ConstructorArguments
-                .FirstOrDefault().Value ?? GetNameExcludingSuffix(serviceName, Symbols.Suffixes.Service);
+        var apiServiceAttribute = @class.GetAttributes().Single(attribute =>
+            attribute.AttributeClass!.ToDisplayString() == Symbols.Types.Project.ApiServiceAttribute);
+        string? tag = null;
+        var rule = string.Empty;
+        foreach (var argPair in apiServiceAttribute.NamedArguments)
+            switch (argPair.Key)
+            {
+                case "Tag":
+                    tag = (string?)argPair.Value.Value;
+                    break;
+                case "Rule":
+                    rule = (string)argPair.Value.Value!;
+                    break;
+            }
+
+        var entityName = tag ?? GetNameExcludingSuffix(serviceName, Symbols.Suffixes.Service);
         var controllerName = entityName + Symbols.Suffixes.Controller;
         var filename = $"{controllerName}.g.cs";
 
@@ -123,7 +135,8 @@ public class ControllerGenerator : ISourceGenerator
         builder.Append(Symbols.Codes.Ident).AppendLine("}").AppendLine();
 
         // Methods
-        var methods = GetAllMembers(@class);
+        if (string.IsNullOrEmpty(rule)) rule = ".*";
+        var methods = GetHttpMethods(@class, rule);
         foreach (var method in methods)
         {
             GenerateMethod(builder, method, serviceMemberName);
@@ -265,8 +278,9 @@ public class ControllerGenerator : ISourceGenerator
             : fullName;
     }
 
-    private static IEnumerable<IMethodSymbol> GetAllMembers(ITypeSymbol @class)
+    private static IEnumerable<IMethodSymbol> GetHttpMethods(ITypeSymbol @class, string rule)
     {
+        var regex = new Regex(rule, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
         while (true)
         {
             foreach (var method in @class.GetMembers().OfType<IMethodSymbol>())
@@ -274,7 +288,8 @@ public class ControllerGenerator : ISourceGenerator
                     method.Name != ".ctor" &&
                     method.DeclaredAccessibility == Accessibility.Public &&
                     method.MethodKind == MethodKind.Ordinary &&
-                    HasHttpMethod(method))
+                    HasHttpMethod(method) &&
+                    regex.IsMatch(method.Name))
                     yield return method;
             var baseType = @class.BaseType;
             if (baseType is not null && @class.ToDisplayString() != Symbols.Types.Project.BaseService)
