@@ -111,18 +111,10 @@ public class ControllerGenerator : ISourceGenerator
         builder.AppendLine("{");
 
         // Service member
-        var serviceMemberName = $"_{serviceName}";
+        var serviceMemberName = serviceName;
         builder.Append(Symbols.Codes.Ident)
-            .AppendLine($"private readonly {serviceFullName} {serviceMemberName};")
+            .AppendLine($"public {serviceFullName} {serviceMemberName} {{ get; init; }} = null!;")
             .AppendLine();
-
-        // Constructor
-        builder.Append(Symbols.Codes.Ident)
-            .AppendLine($"public {controllerName}({serviceFullName} {serviceName})");
-        builder.Append(Symbols.Codes.Ident).AppendLine("{");
-        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
-            .AppendLine($"_{serviceName} = {serviceName};");
-        builder.Append(Symbols.Codes.Ident).AppendLine("}").AppendLine();
 
         // Methods
         if (string.IsNullOrEmpty(rule)) rule = ".*";
