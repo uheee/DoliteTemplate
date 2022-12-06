@@ -11,7 +11,7 @@ namespace DoliteTemplate.Api.Services;
 /// <summary>
 ///     Device Service
 /// </summary>
-[ApiService]
+[ApiService(Rule = "Test.*")]
 public class DeviceService :
     CrudService<ApiDbContext, Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto>,
     IDeviceService
