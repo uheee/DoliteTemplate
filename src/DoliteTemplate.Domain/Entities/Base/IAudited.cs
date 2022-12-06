@@ -7,15 +7,7 @@ public interface IAudited
     Guid? LastModifierId { get; set; }
     DateTime? LastModificationTime { get; set; }
 
-    void CreateBy(Guid id)
-    {
-        CreatorId = id;
-        CreationTime = DateTime.UtcNow;
-    }
+    void CreateBy(Guid id);
 
-    void ModifyBy(Guid id)
-    {
-        LastModifierId = id;
-        LastModificationTime = DateTime.UtcNow;
-    }
+    void ModifyBy(Guid id);
 }

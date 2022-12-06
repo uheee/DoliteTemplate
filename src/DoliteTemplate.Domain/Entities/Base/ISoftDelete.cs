@@ -6,15 +6,7 @@ public interface ISoftDelete
     public Guid? DeleterId { get; set; }
     public DateTime? DeletionTime { get; set; }
 
-    void Delete()
-    {
-        IsDeleted = true;
-    }
+    void Delete();
 
-    void DeleteBy(Guid id)
-    {
-        Delete();
-        DeleterId = id;
-        DeletionTime = DateTime.UtcNow;
-    }
+    void DeleteBy(Guid id);
 }

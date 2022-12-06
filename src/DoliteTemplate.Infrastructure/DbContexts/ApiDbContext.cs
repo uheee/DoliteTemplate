@@ -39,10 +39,11 @@ public class ApiDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<Device>().HasData(new Device
+        var device = new Device
         {
             Type = "Electric",
             Name = "Computer"
-        });
+        };
+        builder.Entity<Device>().HasData(device);
     }
 }
