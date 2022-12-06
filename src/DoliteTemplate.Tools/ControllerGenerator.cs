@@ -28,16 +28,6 @@ public class ControllerGenerator : ISourceGenerator
         }
     };
 
-    private static readonly IEnumerable<string> MethodDefaultResponseTypeAttributes = new[]
-    {
-        Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
-            Symbols.Types.BuildTypeOf("{0}"),
-            $"{Symbols.Types.System.StatusCodes}.Status200OK"),
-        Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
-            Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
-            $"{Symbols.Types.System.StatusCodes}.Status400BadRequest")
-    };
-
     public void Initialize(GeneratorInitializationContext context)
     {
     }
@@ -178,8 +168,19 @@ public class ControllerGenerator : ISourceGenerator
         var attributeLines = attributes.Select(Symbols.Types.BuildAttribute);
         foreach (var attribute in attributeLines)
             builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
-        foreach (var attribute in MethodDefaultResponseTypeAttributes)
-            builder.Append(Symbols.Codes.Ident).AppendFormat(attribute, resultType).AppendLine();
+
+        // Response types
+        var okResponseAttribute = string.IsNullOrEmpty(resultType)
+            ? Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
+                $"{Symbols.Types.System.StatusCodes}.Status200OK")
+            : Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
+                Symbols.Types.BuildTypeOf(resultType), $"{Symbols.Types.System.StatusCodes}.Status200OK");
+        var badRequestResponseAttribute = Symbols.Types.BuildAttribute(
+            Symbols.Types.System.ProducesResponseTypeAttribute,
+            Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
+            $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
+        foreach (var attribute in new[] { okResponseAttribute, badRequestResponseAttribute })
+            builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
 
         // Accessibility
         builder.Append(Symbols.Codes.Ident)
@@ -239,9 +240,21 @@ public class ControllerGenerator : ISourceGenerator
             builder.Append(Symbols.Codes.Ident)
                 .Append(Symbols.Codes.Ident)
                 .AppendLine($"[{attribute}]");
-        builder.Append(Symbols.Codes.Ident)
-            .Append(Symbols.Codes.Ident)
-            .AppendFormat("{0} {1}", parameter.Type.ToDisplayString(), parameter.Name);
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
+        if (parameter.HasExplicitDefaultValue)
+        {
+            var @default = parameter.ExplicitDefaultValue switch
+            {
+                string @string => $"\"{@string}\"",
+                byte @byte => $"'{@byte}'",
+                _ => parameter.ExplicitDefaultValue?.ToString() ?? "null"
+            };
+            builder.AppendFormat("{0} {1} = {2}", parameter.Type.ToDisplayString(), parameter.Name, @default);
+        }
+        else
+        {
+            builder.AppendFormat("{0} {1}", parameter.Type.ToDisplayString(), parameter.Name);
+        }
     }
 
     private static void GenerateParameterUsage(StringBuilder builder, IParameterSymbol parameter)
