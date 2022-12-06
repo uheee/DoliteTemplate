@@ -10,6 +10,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddDbContextFactory<ApiDbContext>(options =>
             options.UseNpgsql(connectionString, o => o.MigrationsAssembly("DoliteTemplate.Infrastructure")));
         services.AddHostedService<DbMigrationService>();
+        services.AddTransient<DataSeeder>();
     })
     .UseSerilog((_, configuration) => configuration.MinimumLevel.Information().WriteTo.Console())
     .Build();
