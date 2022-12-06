@@ -9,7 +9,8 @@ public static class LinqExtensions
     public static PaginatedList<TEntity> ToPagedList<TEntity>(this IQueryable<TEntity> queryable, int pageIndex,
         int pageSize)
     {
-        if (pageIndex < 1) return PaginatedList<TEntity>.Empty(pageIndex, pageSize);
+        if (pageIndex < 1) pageIndex = 1;
+        if (pageSize < 1) pageSize = 10;
         var count = queryable.LongCount();
         var items = queryable.Skip(pageSize * (pageIndex - 1)).Take(pageSize)
             .ToArray();
@@ -19,7 +20,8 @@ public static class LinqExtensions
     public static async Task<PaginatedList<TEntity>> ToPagedListAsync<TEntity>(this IQueryable<TEntity> queryable,
         int pageIndex, int pageSize)
     {
-        if (pageIndex < 1) return PaginatedList<TEntity>.Empty(pageIndex, pageSize);
+        if (pageIndex < 1) pageIndex = 1;
+        if (pageSize < 1) pageSize = 10;
         var count = await queryable.LongCountAsync();
         var items = await queryable.Skip(pageSize * (pageIndex - 1)).Take(pageSize)
             .ToArrayAsync();
@@ -33,7 +35,7 @@ public static class LinqExtensions
             : query;
     }
 
-    public static IQueryable<TEntity> QueryBy<TEntity>(this IQueryable<TEntity> query, QueryOptions<TEntity> options)
+    public static IQueryable<TEntity> Query<TEntity>(this IQueryable<TEntity> query, QueryOptions<TEntity> options)
     {
         options.Predicates.ForEach(predicate => query = query.Where(predicate));
         options.OrderSelectors.ForEach(tuple =>
