@@ -30,7 +30,7 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     /// <summary>
     ///     Get all entities
     /// </summary>
-    /// <returns>All entites</returns>
+    /// <returns>All entities</returns>
     [HttpGet]
     public async Task<IEnumerable<TReadDto>> GetAll()
     {
