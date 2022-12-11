@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using DoliteTemplate.Domain.Entities.Base;
 using DoliteTemplate.Domain.Utils;
 using Microsoft.EntityFrameworkCore;
@@ -35,23 +36,9 @@ public static class LinqExtensions
             : query;
     }
 
-    public static IQueryable<TEntity> Query<TEntity>(this IQueryable<TEntity> query, QueryOptions<TEntity> options)
+    public static IQueryable<TEntity> WhereIf<TEntity>(
+        this IQueryable<TEntity> query, bool condition, Expression<Func<TEntity, bool>> predicate)
     {
-        options.Predicates.ForEach(predicate => query = query.Where(predicate));
-        options.OrderSelectors.ForEach(tuple =>
-        {
-            var (selector, type) = tuple;
-            query = type switch
-            {
-                OrderType.Asc => query is IOrderedQueryable<TEntity> orderedQuery
-                    ? orderedQuery.ThenBy(selector)
-                    : query.OrderBy(selector),
-                OrderType.Desc => query is IOrderedQueryable<TEntity> orderedQuery
-                    ? orderedQuery.ThenByDescending(selector)
-                    : query.OrderByDescending(selector),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        });
-        return query;
+        return condition ? query.Where(predicate) : query;
     }
 }
