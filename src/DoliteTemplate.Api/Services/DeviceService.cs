@@ -49,6 +49,6 @@ public class DeviceService :
     [Route("exception")]
     public string TestException()
     {
-        throw ExceptionFactory.Business(10001);
+        throw ExceptionFactory.Business(10001, "1");
     }
 }

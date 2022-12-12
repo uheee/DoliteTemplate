@@ -16,7 +16,8 @@ public class BaseService
 public class BaseService<TDbContext> : BaseService, IBaseService where TDbContext : DbContext
 {
     public TDbContext DbContext { get; init; } = null!;
-    public DbContextProvider<TDbContext> DbContextProvider { get; init; } = null!;
+    public Lazy<DbContextProvider<TDbContext>> DbContextProviderLazier { get; init; } = null!;
+    public DbContextProvider<TDbContext> DbContextProvider => DbContextProviderLazier.Value;
 
     #region Transaction
 
