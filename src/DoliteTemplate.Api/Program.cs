@@ -65,6 +65,16 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Globalization & Localization
+var supportedCultures = ICulturalResource.GetAvailableCultures();
+app.UseRequestLocalization(options =>
+{
+    options.AddSupportedCultures(supportedCultures)
+        .AddSupportedUICultures(supportedCultures);
+    var defaultCulture = builder.Configuration["Cultures:Default"];
+    if (defaultCulture is not null) options.SetDefaultCulture(defaultCulture);
+});
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

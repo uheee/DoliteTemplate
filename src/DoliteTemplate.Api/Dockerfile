@@ -1,4 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS base
+RUN apk --update add icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
@@ -10,10 +12,10 @@ RUN for file in $(ls *.csproj); do mkdir -p ./${file%.*}/ && mv $file ./${file%.
 RUN dotnet restore "DoliteTemplate.Api/DoliteTemplate.Api.csproj"
 COPY . .
 WORKDIR "/src/DoliteTemplate.Api"
-RUN dotnet build "DoliteTemplate.Api.csproj" -c Release -o /app/build
+RUN dotnet build "DoliteTemplate.Api.csproj" -c Release -o /app/build --no-self-contained
 
 FROM build AS publish
-RUN dotnet publish "DoliteTemplate.Api.csproj" -c Release -o /app/publish
+RUN dotnet publish "DoliteTemplate.Api.csproj" -c Release -o /app/publish --no-self-contained
 
 FROM base AS final
 WORKDIR /app

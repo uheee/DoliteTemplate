@@ -1,5 +1,7 @@
+using DoliteTemplate.Api.Utils;
+
 namespace DoliteTemplate.Api.Resources.Errors;
 
-public class ErrorResource
+public class ErrorResource : ICulturalResource
 {
 }

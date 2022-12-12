@@ -1,5 +1,6 @@
 using DoliteTemplate.Api.Services.Base;
 using DoliteTemplate.Api.Utils;
+using DoliteTemplate.Api.Utils.Error;
 using DoliteTemplate.Domain.DTOs;
 using DoliteTemplate.Domain.Entities;
 using DoliteTemplate.Domain.Services;
@@ -37,5 +38,17 @@ public class DeviceService :
     public object TestDefaultArguments(int i = 100, string s = "Hello", DateTime? t = null)
     {
         return new { i, s, t };
+    }
+
+    /// <summary>
+    ///     Test exception
+    /// </summary>
+    /// <returns>Never</returns>
+    /// <exception cref="BusinessException"></exception>
+    [HttpGet]
+    [Route("exception")]
+    public string TestException()
+    {
+        throw ExceptionFactory.Business(10001);
     }
 }
