@@ -39,26 +39,26 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Update="Resources\Errors\ErrorResource.en.resx">
+        <EmbeddedResource Update="Services\DeviceService.zh-CN.resx">
             <Generator>ResXFileCodeGenerator</Generator>
-            <LastGenOutput>ErrorResource.en.Designer.cs</LastGenOutput>
+            <LastGenOutput>DeviceService.zh-CN.Designer.cs</LastGenOutput>
         </EmbeddedResource>
-        <EmbeddedResource Update="Resources\Errors\ErrorResource.zh.resx">
+        <EmbeddedResource Update="Services\DeviceService.en-US.resx">
             <Generator>ResXFileCodeGenerator</Generator>
-            <LastGenOutput>ErrorResource.zh.Designer.cs</LastGenOutput>
+            <LastGenOutput>DeviceService.en-US.Designer.cs</LastGenOutput>
         </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Update="Resources\Errors\ErrorResource.en.Designer.cs">
+        <Compile Update="Services\DeviceService.zh-CN.Designer.cs">
             <DesignTime>True</DesignTime>
             <AutoGen>True</AutoGen>
-            <DependentUpon>ErrorResource.en.resx</DependentUpon>
+            <DependentUpon>DeviceService.zh-CN.resx</DependentUpon>
         </Compile>
-        <Compile Update="Resources\Errors\ErrorResource.zh.Designer.cs">
+        <Compile Update="Services\DeviceService.en-US.Designer.cs">
             <DesignTime>True</DesignTime>
             <AutoGen>True</AutoGen>
-            <DependentUpon>ErrorResource.zh.resx</DependentUpon>
+            <DependentUpon>DeviceService.en-US.resx</DependentUpon>
         </Compile>
     </ItemGroup>
 

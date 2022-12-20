@@ -1,7 +1,6 @@
 using System.Reflection;
 using Autofac;
 using DoliteTemplate.Api.Services.Base;
-using DoliteTemplate.Api.Utils.Error;
 using Microsoft.AspNetCore.Mvc;
 using Module = Autofac.Module;
 
@@ -19,7 +18,6 @@ public class AppModule : Module
             .AsImplementedInterfaces()
             .AsSelf()
             .PropertiesAutowired();
-        builder.RegisterType<ExceptionFactory>().PropertiesAutowired();
         // Set custom injection rules
     }
 }

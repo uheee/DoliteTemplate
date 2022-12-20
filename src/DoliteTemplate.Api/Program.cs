@@ -69,8 +69,7 @@ var app = builder.Build();
 var supportedCultures = ICulturalResource.GetAvailableCultures();
 app.UseRequestLocalization(options =>
 {
-    options.AddSupportedCultures(supportedCultures)
-        .AddSupportedUICultures(supportedCultures);
+    options.AddSupportedCultures(supportedCultures);
     var defaultCulture = builder.Configuration["Cultures:Default"];
     if (defaultCulture is not null) options.SetDefaultCulture(defaultCulture);
 });

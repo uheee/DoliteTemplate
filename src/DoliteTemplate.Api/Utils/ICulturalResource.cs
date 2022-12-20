@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Microsoft.Extensions.Localization;
 
 namespace DoliteTemplate.Api.Utils;
 
@@ -17,4 +18,9 @@ public interface ICulturalResource
             .Distinct()
             .ToArray();
     }
+}
+
+public interface ICulturalResource<TResource> : ICulturalResource
+{
+    IStringLocalizer<TResource> Localizer { get; init; }
 }

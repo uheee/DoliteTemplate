@@ -7,9 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DoliteTemplate.Api.Services.Base;
 
-public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> :
-    BaseService<TDbContext>,
+public class CrudService<TService, TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> :
+    BaseService<TService, TDbContext>,
     ICrudService<TEntity, TReadDto, TCreateDto, TUpdateDto>
+    where TService : CrudService<TService, TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto>
     where TDbContext : DbContext
     where TEntity : BaseEntity, new()
 {
@@ -131,15 +132,17 @@ public class CrudService<TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> 
     }
 }
 
-public class CrudService<TDbContext, TEntity, TReadDto, TCreateUpdateDto> :
-    CrudService<TDbContext, TEntity, TReadDto, TCreateUpdateDto, TCreateUpdateDto>
+public class CrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto> :
+    CrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto, TCreateUpdateDto>
+    where TService : CrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto>
     where TDbContext : DbContext
     where TEntity : BaseEntity, new()
 {
 }
 
-public class CrudService<TDbContext, TEntity, TDto> :
-    CrudService<TDbContext, TEntity, TDto, TDto, TDto>
+public class CrudService<TService, TDbContext, TEntity, TDto> :
+    CrudService<TService, TDbContext, TEntity, TDto, TDto, TDto>
+    where TService : CrudService<TService, TDbContext, TEntity, TDto>
     where TDbContext : DbContext
     where TEntity : BaseEntity, new()
 {

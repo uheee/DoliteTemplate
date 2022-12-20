@@ -1,19 +1,34 @@
 using AutoMapper;
 using DoliteTemplate.Api.Utils;
 using DoliteTemplate.Api.Utils.Error;
-using DoliteTemplate.Domain.Services.Base;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using Serilog;
 
 namespace DoliteTemplate.Api.Services.Base;
 
-public class BaseService
+public abstract class BaseService
 {
     public IMapper Mapper { get; init; } = null!;
-    public ExceptionFactory ExceptionFactory { get; init; } = null!;
 }
 
-public class BaseService<TDbContext> : BaseService, IBaseService where TDbContext : DbContext
+public class BaseService<TService> : BaseService, ICulturalResource<TService>
+    where TService : BaseService<TService>
+{
+    public IStringLocalizer<TService> Localizer { get; init; } = null!;
+
+    public BusinessException Error(int errCode, params object[] args)
+    {
+        var errTemplate = Localizer[errCode.ToString()];
+        var errMsg = string.Format(errTemplate, args);
+        if (string.IsNullOrEmpty(errMsg)) errMsg = "unknown";
+        return new BusinessException(errCode, errMsg);
+    }
+}
+
+public class BaseService<TService, TDbContext> : BaseService<TService>
+    where TService : BaseService<TService, TDbContext>
+    where TDbContext : DbContext
 {
     public TDbContext DbContext { get; init; } = null!;
     public Lazy<DbContextProvider<TDbContext>> DbContextProviderLazier { get; init; } = null!;

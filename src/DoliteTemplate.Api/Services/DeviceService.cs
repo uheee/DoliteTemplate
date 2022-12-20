@@ -14,7 +14,7 @@ namespace DoliteTemplate.Api.Services;
 /// </summary>
 [ApiService(Rule = "Test.*")]
 public class DeviceService :
-    CrudService<ApiDbContext, Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto>,
+    CrudService<DeviceService, ApiDbContext, Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto>,
     IDeviceService
 {
     /// <summary>
@@ -49,6 +49,6 @@ public class DeviceService :
     [Route("exception")]
     public string TestException()
     {
-        throw ExceptionFactory.Business(10001, "1");
+        throw Error(10001, "1");
     }
 }
