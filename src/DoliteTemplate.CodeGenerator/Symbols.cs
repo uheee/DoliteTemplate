@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Microsoft.CodeAnalysis;
 
-namespace DoliteTemplate.Tools;
+namespace DoliteTemplate.CodeGenerator;
 
 public static class Symbols
 {

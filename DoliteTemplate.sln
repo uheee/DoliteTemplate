@@ -10,7 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoliteTemplate.Domain", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoliteTemplate.Infrastructure", "src\DoliteTemplate.Infrastructure\DoliteTemplate.Infrastructure.csproj", "{6DB49C50-0278-4F15-AFA5-078B654BAA98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoliteTemplate.Tools", "src\DoliteTemplate.Tools\DoliteTemplate.Tools.csproj", "{BBFF5AB1-C085-4384-8D62-17E6C469215A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DoliteTemplate.CodeGenerator", "src\DoliteTemplate.CodeGenerator\DoliteTemplate.CodeGenerator.csproj", "{BBFF5AB1-C085-4384-8D62-17E6C469215A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

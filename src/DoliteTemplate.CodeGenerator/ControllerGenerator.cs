@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace DoliteTemplate.Tools;
+namespace DoliteTemplate.CodeGenerator;
 
 [Generator]
 public class ControllerGenerator : ISourceGenerator

@@ -35,7 +35,7 @@
     <ItemGroup>
         <ProjectReference Include="..\DoliteTemplate.Domain\DoliteTemplate.Domain.csproj"/>
         <ProjectReference Include="..\DoliteTemplate.Infrastructure\DoliteTemplate.Infrastructure.csproj"/>
-        <ProjectReference Include="..\DoliteTemplate.Tools\DoliteTemplate.Tools.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\DoliteTemplate.CodeGenerator\DoliteTemplate.CodeGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
     <ItemGroup>
