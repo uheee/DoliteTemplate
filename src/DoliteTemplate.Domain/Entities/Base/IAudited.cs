@@ -7,7 +7,7 @@ public interface IAudited
     Guid? LastModifierId { get; set; }
     DateTime? LastModificationTime { get; set; }
 
-    void CreateBy(Guid id);
+    void CreateBy(Guid? id);
 
-    void ModifyBy(Guid id);
+    void ModifyBy(Guid? id);
 }

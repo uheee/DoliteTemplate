@@ -7,13 +7,13 @@ public class AuditedEntity : BaseEntity, IAudited
     public Guid? LastModifierId { get; set; }
     public DateTime? LastModificationTime { get; set; }
 
-    public void CreateBy(Guid id)
+    public void CreateBy(Guid? id)
     {
         CreatorId = id;
         CreationTime = DateTime.UtcNow;
     }
 
-    public void ModifyBy(Guid id)
+    public void ModifyBy(Guid? id)
     {
         LastModifierId = id;
         LastModificationTime = DateTime.UtcNow;

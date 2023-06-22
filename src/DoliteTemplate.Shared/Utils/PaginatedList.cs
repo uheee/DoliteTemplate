@@ -1,4 +1,4 @@
-namespace DoliteTemplate.Domain.Utils;
+namespace DoliteTemplate.Shared.Utils;
 
 public class PaginatedList<T>
 {

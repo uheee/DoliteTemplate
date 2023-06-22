@@ -1,12 +1,13 @@
 namespace DoliteTemplate.Domain.Entities.Base;
 
-public interface ISoftDelete
+public interface ISoftDeletable
 {
     public bool IsDeleted { get; set; }
     public Guid? DeleterId { get; set; }
     public DateTime? DeletionTime { get; set; }
+    public bool IsHardDeleted { get; set; }
 
-    void Delete();
+    void Delete(bool hard = false);
 
-    void DeleteBy(Guid id);
+    void DeleteBy(Guid? id, bool hard = false);
 }

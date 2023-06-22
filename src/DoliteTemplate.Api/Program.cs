@@ -1,22 +1,11 @@
-using System.Net.Mime;
 using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using DoliteTemplate.Api;
 using DoliteTemplate.Api.Utils;
-using DoliteTemplate.Api.Utils.Error;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
+using DoliteTemplate.Shared.Utils;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Init Global
-GlobalDefinitions.Configuration = builder.Configuration;
 
 // Use Serilog
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
@@ -33,11 +22,10 @@ builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 // builder.Services.AddDbContext<ApiDbContext>();
 
 // Use Auth
-var encryptHelper = new EncryptHelper(GlobalDefinitions.KeyPath);
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => options.TokenValidationParameters =
-        GlobalDefinitions.JwtBearerTokenValidationParameters(encryptHelper.GetPublicKey("user")));
-builder.Services.AddAuthorization();
+var encryptHelper = new EncryptHelper(builder.Configuration["Key:Path"]);
+builder.Services.AddSingleton(encryptHelper);
+builder.Services.ConfigureAuthentication(builder.Configuration, encryptHelper.GetPublicKey("user"));
+builder.Services.AddAuthorization(options => options.AutoSetPolicies());
 
 // Use Localization
 builder.Services.AddLocalization();
@@ -45,34 +33,17 @@ builder.Services.AddLocalization();
 // Add services to the container.
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddControllers();
-builder.Services.AddMvcCore().AddApiExplorer().AddControllersAsServices().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-});
+builder.Services.AddMvcCore().AddApiExplorer().AddControllersAsServices()
+    .AddJsonOptions(options => options.JsonSerializerOptions.ConfigureDefault());
 builder.Services.AddHttpContextAccessor();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    var info = GlobalDefinitions.OpenApiInfo;
-    options.SwaggerDoc(info.Version, info);
-    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, GlobalDefinitions.OpenApiSecurityScheme);
-    options.AddSecurityRequirement(GlobalDefinitions.OpenApiSecurityRequirement);
-});
+builder.Services.ConfigureOpenApi(builder.Configuration);
 
-var app = builder.Build();
+var app = World.App = builder.Build();
 
 // Globalization & Localization
-var supportedCultures = ICulturalResource.GetAvailableCultures();
-app.UseRequestLocalization(options =>
-{
-    options.AddSupportedCultures(supportedCultures);
-    var defaultCulture = builder.Configuration["Cultures:Default"];
-    if (defaultCulture is not null) options.SetDefaultCulture(defaultCulture);
-});
+app.UseLocalization(builder.Configuration);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -82,25 +53,10 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
-app.UseExceptionHandler(appBuilder =>
-{
-    appBuilder.Run(async context =>
-    {
-        var exception = context.Features.Get<IExceptionHandlerPathFeature>()!.Error;
-        var error = exception.ToErrorInfo(app.Environment.IsDevelopment());
-        context.Response.ContentType = MediaTypeNames.Application.Json;
-        context.Response.StatusCode = exception switch
-        {
-            BusinessException => StatusCodes.Status400BadRequest,
-            _ => StatusCodes.Status500InternalServerError
-        };
-        var jsonOptions = app.Services.GetService<IOptions<JsonOptions>>()!.Value;
-        await context.Response.WriteAsJsonAsync(error, jsonOptions.JsonSerializerOptions);
-    });
-});
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
-app.UseAuthorization();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 await app.RunAsync();

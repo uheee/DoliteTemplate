@@ -3,7 +3,9 @@ using DoliteTemplate.Api.Utils;
 using DoliteTemplate.Api.Utils.Error;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using Npgsql;
 using Serilog;
+using StackExchange.Redis;
 
 namespace DoliteTemplate.Api.Services.Base;
 
@@ -15,13 +17,17 @@ public abstract class BaseService
 public class BaseService<TService> : BaseService, ICulturalResource<TService>
     where TService : BaseService<TService>
 {
+    public IConnectionMultiplexer Redis { get; init; } = null!;
+    public IHttpContextAccessor HttpContextAccessor { get; init; } = null!;
+    public EncryptHelper EncryptHelper { get; init; } = null!;
     public IStringLocalizer<TService> Localizer { get; init; } = null!;
 
-    public BusinessException Error(int errCode, params object[] args)
+    public BusinessException Error(string errCode, params object[] args)
     {
-        var errTemplate = Localizer[errCode.ToString()];
+        var errTemplate = Localizer[errCode];
         var errMsg = string.Format(errTemplate, args);
         if (string.IsNullOrEmpty(errMsg)) errMsg = "unknown";
+
         return new BusinessException(errCode, errMsg);
     }
 }
@@ -30,9 +36,12 @@ public class BaseService<TService, TDbContext> : BaseService<TService>
     where TService : BaseService<TService, TDbContext>
     where TDbContext : DbContext
 {
-    public TDbContext DbContext { get; init; } = null!;
+    public NpgsqlConnection DbConnection { get; init; } = null!;
+    public Lazy<TDbContext> DbContextLazier { get; init; } = null!;
+    public TDbContext DbContext => DbContextLazier.Value;
     public Lazy<DbContextProvider<TDbContext>> DbContextProviderLazier { get; init; } = null!;
     public DbContextProvider<TDbContext> DbContextProvider => DbContextProviderLazier.Value;
+    public NpgsqlLargeObjectManager ObjectManager { get; init; } = null!;
 
     #region Transaction
 
@@ -52,14 +61,20 @@ public class BaseService<TService, TDbContext> : BaseService<TService>
         {
             await action(DbContextProvider);
             if (DbContextProvider.Transaction is null)
+            {
                 throw new Exception("DbContext count is less than 1");
+            }
+
             await DbContextProvider.Transaction.CommitAsync();
         }
         catch (Exception e)
         {
             Log.Error(e, "Failed to execute transaction");
             if (DbContextProvider.Transaction is not null)
+            {
                 await DbContextProvider.Transaction.RollbackAsync();
+            }
+
             throw;
         }
     }
@@ -70,7 +85,10 @@ public class BaseService<TService, TDbContext> : BaseService<TService>
         {
             var result = await action(DbContextProvider);
             if (DbContextProvider.Transaction is null)
+            {
                 throw new Exception("DbContext count is less than 1");
+            }
+
             await DbContextProvider.Transaction.CommitAsync();
             return result;
         }
@@ -78,7 +96,10 @@ public class BaseService<TService, TDbContext> : BaseService<TService>
         {
             Log.Error(e, "Failed to execute transaction");
             if (DbContextProvider.Transaction is not null)
+            {
                 await DbContextProvider.Transaction.RollbackAsync();
+            }
+
             throw;
         }
     }

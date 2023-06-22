@@ -1,4 +1,5 @@
 using System.Data.Common;
+using DoliteTemplate.Infrastructure.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace DoliteTemplate.Api.Utils;

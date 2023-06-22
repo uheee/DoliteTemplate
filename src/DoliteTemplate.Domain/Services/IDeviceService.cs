@@ -4,6 +4,6 @@ using DoliteTemplate.Domain.Services.Base;
 
 namespace DoliteTemplate.Domain.Services;
 
-public interface IDeviceService : ICrudService<Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto>
+public interface IDeviceService : IEntityCrudService<Device, DeviceReadDto, DeviceCreateDto, DeviceUpdateDto>
 {
 }

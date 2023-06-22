@@ -7,10 +7,11 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
 WORKDIR /src
-COPY ./**/*.csproj ./
+COPY src/**/*.csproj ./
 RUN for file in $(ls *.csproj); do mkdir -p ./${file%.*}/ && mv $file ./${file%.*}/; done
+ENV HUSKY=0
 RUN dotnet restore "DoliteTemplate.Api/DoliteTemplate.Api.csproj"
-COPY . .
+COPY src .
 WORKDIR "/src/DoliteTemplate.Api"
 RUN dotnet build "DoliteTemplate.Api.csproj" -c Release -o /app/build --no-self-contained
 

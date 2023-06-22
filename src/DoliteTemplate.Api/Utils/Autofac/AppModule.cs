@@ -18,6 +18,5 @@ public class AppModule : Module
             .AsImplementedInterfaces()
             .AsSelf()
             .PropertiesAutowired();
-        // Set custom injection rules
     }
 }

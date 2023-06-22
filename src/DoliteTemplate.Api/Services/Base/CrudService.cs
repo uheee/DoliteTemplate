@@ -1,18 +1,19 @@
-using DoliteTemplate.Domain.Entities.Base;
+using System.Reflection;
 using DoliteTemplate.Domain.Services.Base;
-using DoliteTemplate.Domain.Utils;
 using DoliteTemplate.Infrastructure.Utils;
+using DoliteTemplate.Shared.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace DoliteTemplate.Api.Services.Base;
 
-public class CrudService<TService, TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto> :
+public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateDto, TUpdateDto> :
     BaseService<TService, TDbContext>,
-    ICrudService<TEntity, TReadDto, TCreateDto, TUpdateDto>
-    where TService : CrudService<TService, TDbContext, TEntity, TReadDto, TCreateDto, TUpdateDto>
+    ICrudService<TEntity, TKey, TReadDto, TCreateDto, TUpdateDto>
+    where TService : CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateDto, TUpdateDto>
     where TDbContext : DbContext
-    where TEntity : BaseEntity, new()
+    where TEntity : class, new()
 {
     /// <summary>
     ///     Get entity by identifier
@@ -21,10 +22,10 @@ public class CrudService<TService, TDbContext, TEntity, TReadDto, TCreateDto, TU
     /// <returns>An entity</returns>
     [HttpGet]
     [Route("{id:guid}")]
-    public async Task<TReadDto?> Get(Guid id)
+    public virtual async Task<TReadDto?> Get(TKey id)
     {
-        var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .SingleOrDefaultAsync(entity => entity.Id == id);
+        var result = await DbContext.Set<TEntity>()
+            .FindAsync(id);
         return Mapper.Map<TReadDto>(result);
     }
 
@@ -33,10 +34,11 @@ public class CrudService<TService, TDbContext, TEntity, TReadDto, TCreateDto, TU
     /// </summary>
     /// <returns>All entities</returns>
     [HttpGet]
-    public async Task<IEnumerable<TReadDto>> GetAll()
+    public virtual async Task<IEnumerable<TReadDto>> GetAll()
     {
-        var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .ToArrayAsync();
+        IQueryable<TEntity> query = DbContext.Set<TEntity>();
+        query = AfterQuery(query);
+        var result = await query.ToArrayAsync();
         return Mapper.Map<IEnumerable<TReadDto>>(result);
     }
 
@@ -48,10 +50,11 @@ public class CrudService<TService, TDbContext, TEntity, TReadDto, TCreateDto, TU
     /// <returns>All paginated entities</returns>
     [HttpGet]
     [Route("paging")]
-    public async Task<PaginatedList<TReadDto>> GetAllPaged(int pageIndex, int pageSize)
+    public virtual async Task<PaginatedList<TReadDto>> GetAllPaged(int pageIndex, int pageSize)
     {
-        var result = await DbContext.Set<TEntity>().SkipDeleted()
-            .ToPagedListAsync(pageIndex, pageSize);
+        IQueryable<TEntity> query = DbContext.Set<TEntity>();
+        query = AfterQuery(query);
+        var result = await query.ToPagedListAsync(pageIndex, pageSize);
         return Mapper.Map<PaginatedList<TReadDto>>(result);
     }
 
@@ -61,89 +64,57 @@ public class CrudService<TService, TDbContext, TEntity, TReadDto, TCreateDto, TU
     /// <param name="dto">entity DTO</param>
     /// <returns>The created entity</returns>
     [HttpPost]
-    public async Task<TReadDto?> Create([FromBody] TCreateDto dto)
+    public virtual async Task<TReadDto> Create([FromBody] TCreateDto dto)
     {
         var entity = Mapper.Map<TEntity>(dto);
         DbContext.Set<TEntity>().Add(entity);
         await DbContext.SaveChangesAsync();
-        return await Get(entity.Id);
+        return Mapper.Map<TReadDto>(entity);
     }
 
-    /// <summary>
-    ///     Update an entity
-    /// </summary>
-    /// <param name="id">Unique identifier</param>
-    /// <param name="dto">New entity DTO</param>
-    /// <returns>The updated entity</returns>
-    [HttpPut]
-    [Route("{id:guid}")]
-    public async Task<TReadDto?> Update(Guid id, [FromBody] TUpdateDto dto)
+    public abstract Task<int> Update(TKey id, TUpdateDto dto);
+
+    public abstract Task<int> Delete(TKey id);
+
+    public abstract Task<int> DeleteRange(IEnumerable<TKey> ids);
+
+    protected virtual IQueryable<TEntity> AfterQuery(IQueryable<TEntity> query)
     {
-        var entity = new TEntity { Id = id };
-        DbContext.Set<TEntity>().Attach(entity);
-        Mapper.Map(dto, entity);
-        await DbContext.SaveChangesAsync();
-        return await Get(entity.Id);
+        return query;
     }
 
-    /// <summary>
-    ///     Delete an entity
-    /// </summary>
-    /// <param name="id">Unique identifier</param>
-    /// <returns>The deleted entity</returns>
-    [HttpDelete]
-    [Route("{id:guid}")]
-    public async Task<TReadDto> Delete(Guid id)
+    protected virtual void ManuallyMarkDirtyChanges(EntityEntry<TEntity> entry, TUpdateDto updateDto)
     {
-        var entity = new TEntity { Id = id };
-        DbContext.Set<TEntity>().Attach(entity);
-        TEntity result;
-        switch (entity)
+        var properties = typeof(TUpdateDto)
+            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .ToDictionary(property => property.Name);
+
+        foreach (var propertyEntry in entry.Properties)
         {
-            case ISoftDelete softDelete:
-                softDelete.Delete();
-                result = entity;
-                break;
-            default:
-                result = DbContext.Set<TEntity>().Remove(entity).Entity;
-                break;
+            if (!properties.TryGetValue(propertyEntry.Metadata.Name, out var property))
+            {
+                continue;
+            }
+
+            propertyEntry.IsModified = property.GetValue(updateDto) is not null;
         }
-
-        await DbContext.SaveChangesAsync();
-        return Mapper.Map<TReadDto>(result);
-    }
-
-    /// <summary>
-    ///     Delete some entities
-    /// </summary>
-    /// <param name="ids">Unique identifiers</param>
-    /// <returns>Count of the deleted entities</returns>
-    [HttpDelete]
-    public async Task<int> DeleteRange([FromBody] IEnumerable<Guid> ids)
-    {
-        var entities = ids.Select(id => new TEntity { Id = id }).ToList();
-        DbContext.Set<TEntity>().AttachRange(entities);
-        if (typeof(TEntity).IsAssignableTo(typeof(ISoftDelete)))
-            entities.ForEach(entity => ((ISoftDelete)entity).Delete());
-        else
-            DbContext.Set<TEntity>().RemoveRange(entities);
-        var result = await DbContext.SaveChangesAsync();
-        return result;
     }
 }
 
-public class CrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto> :
-    CrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto, TCreateUpdateDto>
-    where TService : CrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto>
+public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateUpdateDto> :
+    CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateUpdateDto, TCreateUpdateDto>,
+    ICrudService<TEntity, TKey, TReadDto, TCreateUpdateDto>
+    where TService : CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateUpdateDto>
     where TDbContext : DbContext
-    where TEntity : BaseEntity, new()
+    where TEntity : class, new()
 {
 }
 
-public class CrudService<TService, TDbContext, TEntity, TDto> :
-    CrudService<TService, TDbContext, TEntity, TDto, TDto, TDto>
-    where TService : CrudService<TService, TDbContext, TEntity, TDto>
+public abstract class CrudService<TService, TDbContext, TEntity, TKey, TDto> :
+    CrudService<TService, TDbContext, TEntity, TKey, TDto, TDto, TDto>,
+    ICrudService<TEntity, TKey, TDto>
+    where TService : CrudService<TService, TDbContext, TEntity, TKey, TDto>
     where TDbContext : DbContext
-    where TEntity : BaseEntity, new()
+    where TEntity : class, new()
 {
 }

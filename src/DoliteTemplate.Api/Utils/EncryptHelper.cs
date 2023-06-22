@@ -10,9 +10,9 @@ public class EncryptHelper
 {
     private readonly string _keyPath;
 
-    public EncryptHelper(string keyPath)
+    public EncryptHelper(string? keyPath)
     {
-        _keyPath = keyPath;
+        _keyPath = keyPath ?? throw new Exception("Missing key path");
         if (!Directory.Exists(_keyPath)) Directory.CreateDirectory(_keyPath);
     }
 
@@ -22,6 +22,7 @@ public class EncryptHelper
     public ECDsaSecurityKey GetPrivateKey(string name)
     {
         if (PrivateKeys.TryGetValue(name, out var securityKey)) return securityKey;
+
         if (!UpdateKey(name, true))
         {
             GenerateKeys(name);
@@ -36,6 +37,7 @@ public class EncryptHelper
     public ECDsaSecurityKey GetPublicKey(string name)
     {
         if (PublicKeys.TryGetValue(name, out var securityKey)) return securityKey;
+
         if (!UpdateKey(name, false))
         {
             GenerateKey(GetPrivateKey(name).ECDsa, name, false);
@@ -71,6 +73,7 @@ public class EncryptHelper
     {
         var file = Path.Combine(_keyPath, $"{name}{(isPrivate ? "_private" : "_public")}.pem");
         if (!File.Exists(file)) return false;
+
         var content = File.ReadAllText(file);
         var key = ECDsa.Create();
         key.ImportFromPem(content);

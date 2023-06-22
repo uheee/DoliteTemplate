@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Microsoft.CodeAnalysis;
 
 namespace DoliteTemplate.CodeGenerator;
@@ -60,6 +60,7 @@ public static class Symbols
             public const string BaseService = $"{Namespaces.Project.Api}.Services.Base.BaseService";
             public const string ErrorInfo = $"{Namespaces.Project.Api}.Utils.Error.ErrorInfo";
             public const string ApiServiceAttribute = $"{Namespaces.Project.Api}.Utils.ApiServiceAttribute";
+            public const string TransactionAttribute = $"{Namespaces.Project.Api}.Utils.TransactionAttribute";
         }
     }
 

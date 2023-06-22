@@ -1,7 +1,7 @@
 using AutoMapper;
 using DoliteTemplate.Domain.DTOs;
 using DoliteTemplate.Domain.Entities;
-using DoliteTemplate.Domain.Utils;
+using DoliteTemplate.Shared.Utils;
 
 namespace DoliteTemplate.Api.Utils.AutoMapper;
 
