@@ -197,8 +197,8 @@ public class ApiDbContext : DbContext
             var typedValidationMethod = validationMethod.MakeGenericMethod(clrType);
             var duplicatePropertyName = uniquePropertyNameGroups.FirstOrDefault(propertyNames =>
             {
-                var dict = typedSpecifyMethod.Invoke(null, new object[] {entry, propertyNames.ToArray()})!;
-                return (bool)typedValidationMethod.Invoke(null, new[] {this, dict, entity})!;
+                var dict = typedSpecifyMethod.Invoke(null, new object[] { entry, propertyNames.ToArray() })!;
+                return (bool)typedValidationMethod.Invoke(null, new[] { this, dict, entity })!;
             });
             if (duplicatePropertyName is not null)
             {
@@ -226,7 +226,7 @@ public class ApiDbContext : DbContext
                 }
             }
 
-            if (entry is {State: EntityState.Deleted, Entity: ISoftDeletable {IsHardDeleted: false} softDeletable})
+            if (entry is { State: EntityState.Deleted, Entity: ISoftDeletable { IsHardDeleted: false } softDeletable })
             {
                 entry.State = EntityState.Modified;
                 softDeletable.DeleteBy(userId);

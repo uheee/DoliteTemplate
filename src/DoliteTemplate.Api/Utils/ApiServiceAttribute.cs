@@ -1,4 +1,4 @@
-﻿namespace DoliteTemplate.Api.Utils;
+namespace DoliteTemplate.Api.Utils;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class ApiServiceAttribute : Attribute

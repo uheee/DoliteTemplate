@@ -1,0 +1,54 @@
+{
+  "tasks": [
+    {
+      "name": "code-formatter",
+      "group": "pre-commit",
+      "command": "dotnet",
+      "args": [
+        "dotnet-format",
+        "--include",
+        "${staged}"
+      ]
+    },
+    {
+      "name": "commit-message-linter",
+      "command": "dotnet",
+      "args": [
+        "script",
+        ".husky/csx/commit-lint.csx",
+        "--",
+        "${args}",
+        "${staged}"
+      ]
+    },
+    {
+      "name": "warning-check",
+      "command": "dotnet",
+      "group": "pre-push",
+      "args": [
+        "build",
+        "/warnaserror"
+      ],
+      "include": [
+        "**/*.cs",
+        "**/*.vb"
+      ]
+    },
+    {
+      "name": "Welcome",
+      "output": "always",
+      "command": "bash",
+      "args": [
+        "-c",
+        "echo Nice work! 🥂"
+      ],
+      "windows": {
+        "command": "cmd",
+        "args": [
+          "/c",
+          "echo Nice work! 🥂"
+        ]
+      }
+    }
+  ]
+}

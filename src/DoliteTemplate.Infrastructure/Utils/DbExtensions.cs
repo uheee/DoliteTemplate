@@ -21,7 +21,7 @@ public static class DbExtensions
         return connectionStrings switch
         {
             null => throw new Exception("Invalid connection strings structure"),
-            {Length: 0} => throw new Exception("No connection string"),
+            { Length: 0 } => throw new Exception("No connection string"),
             _ => _firstAvailableConnectionString ??= connectionStrings.FirstOrDefault(connectionString =>
             {
                 Log.Verbose("Attempt to connect to database using {ConnectionString}", connectionString);
@@ -63,7 +63,7 @@ public static class DbExtensions
             .Where(method => method.Name == nameof(Queryable.Any))
             .Single(method => method.GetParameters().Length == 1);
         anyMethod = anyMethod!.MakeGenericMethod(type);
-        return (bool)anyMethod.Invoke(null, new[] {queryable})!;
+        return (bool)anyMethod.Invoke(null, new[] { queryable })!;
     }
 
     public static bool HasDataWithPrimaryKeys<TEntity>(this DbContext dbContext, params object[] keyValues)
@@ -159,12 +159,12 @@ public static class DbExtensions
             .MakeGenericMethod(clrType);
         return entity => filter switch
         {
-            {Mode: DbFilterMode.Always} => false,
-            {Mode: DbFilterMode.Key, Args: null or {Length: 0}} when primaryKey is not null =>
+            { Mode: DbFilterMode.Always } => false,
+            { Mode: DbFilterMode.Key, Args: null or { Length: 0 } } when primaryKey is not null =>
                 (bool)typeof(DbExtensions).GetMethod(nameof(HasDataWithPrimaryKeys),
                     BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(clrType).Invoke(null,
-                    new object[] {dbContext, GetPrimaryKeyValue(entity, clrType, primaryKey)})!,
-            {Mode: DbFilterMode.Key, Args: {Length: > 0} key} =>
+                    new object[] { dbContext, GetPrimaryKeyValue(entity, clrType, primaryKey) })!,
+            { Mode: DbFilterMode.Key, Args: { Length: > 0 } key } =>
                 (bool)typeof(DbExtensions).GetMethod(nameof(HasDataWithSpecifiedKeys),
                     BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(clrType).Invoke(null,
                     new[]
@@ -178,7 +178,7 @@ public static class DbExtensions
                             })!,
                         null
                     })!,
-            {Mode: DbFilterMode.Empty} => dbContext.HasData(clrType),
+            { Mode: DbFilterMode.Empty } => dbContext.HasData(clrType),
             _ => true
         };
     }

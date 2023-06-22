@@ -77,9 +77,9 @@ public static class SerializerExtensions
     {
         return content switch
         {
-            {Length: 0} => string.Empty,
-            {Length: 1} => content.ToLower(),
-            {Length: > 1} => content[..1].ToLower() + content[1..]
+            { Length: 0 } => string.Empty,
+            { Length: 1 } => content.ToLower(),
+            { Length: > 1 } => content[..1].ToLower() + content[1..]
         };
     }
 }

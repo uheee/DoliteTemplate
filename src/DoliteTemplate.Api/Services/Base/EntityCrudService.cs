@@ -22,7 +22,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateD
     [Route("{id:guid}")]
     public override async Task<int> Update(Guid id, [FromBody] TUpdateDto dto)
     {
-        var entity = new TEntity {Id = id};
+        var entity = new TEntity { Id = id };
         DbContext.Set<TEntity>().Attach(entity);
         Mapper.Map(dto, entity);
         return await DbContext.SaveChangesAsync();
@@ -37,7 +37,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateD
     [Route("{id:guid}")]
     public override async Task<int> Delete(Guid id)
     {
-        var entity = new TEntity {Id = id};
+        var entity = new TEntity { Id = id };
         DbContext.Set<TEntity>().Attach(entity);
         DbContext.Set<TEntity>().Remove(entity);
         return await DbContext.SaveChangesAsync();
@@ -51,7 +51,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateD
     [HttpDelete]
     public override async Task<int> DeleteRange([FromBody] IEnumerable<Guid> ids)
     {
-        var entities = ids.Select(id => new TEntity {Id = id}).ToList();
+        var entities = ids.Select(id => new TEntity { Id = id }).ToList();
         DbContext.Set<TEntity>().AttachRange(entities);
         DbContext.Set<TEntity>().RemoveRange(entities);
         return await DbContext.SaveChangesAsync();

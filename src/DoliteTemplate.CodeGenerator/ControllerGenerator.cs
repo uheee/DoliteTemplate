@@ -188,7 +188,7 @@ public class ControllerGenerator : ISourceGenerator
             Symbols.Types.System.ProducesResponseTypeAttribute,
             Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
             $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
-        foreach (var attribute in new[] {okResponseAttribute, badRequestResponseAttribute})
+        foreach (var attribute in new[] { okResponseAttribute, badRequestResponseAttribute })
         {
             builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
         }
@@ -330,7 +330,7 @@ public class ControllerGenerator : ISourceGenerator
         var nodes = xmlDoc.FirstChild.ChildNodes;
         foreach (XmlNode node in nodes)
         {
-            var nodeLines = node.OuterXml.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
+            var nodeLines = node.OuterXml.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var nodeLine in nodeLines)
             {
                 foreach (var _ in Enumerable.Range(0, indentLevel))
@@ -375,7 +375,7 @@ public class ControllerGenerator : ISourceGenerator
 
                 if (!method.IsStatic &&
                     method.Name != ".ctor" &&
-                    method is {DeclaredAccessibility: Accessibility.Public, MethodKind: MethodKind.Ordinary} &&
+                    method is { DeclaredAccessibility: Accessibility.Public, MethodKind: MethodKind.Ordinary } &&
                     !ignoredMethods.Contains(method) &&
                     HasHttpMethod(method) &&
                     regex.IsMatch(method.Name))

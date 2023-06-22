@@ -23,7 +23,7 @@ public static class ErrorInfoExtensions
             case null:
                 return null;
             case BusinessException businessException:
-                return new ErrorInfo {ErrCode = businessException.ErrCode, ErrMsg = businessException.ErrMsg};
+                return new ErrorInfo { ErrCode = businessException.ErrCode, ErrMsg = businessException.ErrMsg };
             case DuplicateException duplicateException:
                 const string duplicateError = "{0} exists with duplicate {1}";
                 var localizedDuplicateError = errorsLocalizer[duplicateError];

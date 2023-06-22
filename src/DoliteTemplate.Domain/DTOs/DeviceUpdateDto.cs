@@ -1,4 +1,4 @@
-﻿namespace DoliteTemplate.Domain.DTOs;
+namespace DoliteTemplate.Domain.DTOs;
 
 public class DeviceUpdateDto
 {
