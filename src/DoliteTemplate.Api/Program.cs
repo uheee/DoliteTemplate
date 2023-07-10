@@ -3,6 +3,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using DoliteTemplate.Api.Utils;
 using DoliteTemplate.Shared.Utils;
+using GraphQL;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,14 @@ builder.Host.ConfigureContainer<ContainerBuilder>(options =>
 
 // Use AutoMapper
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddGraphQL(b =>
+{
+    b.AddAutoSchema<Query>();
+    b.AddSystemTextJson(options =>
+    {
+        options.WriteIndented = true;
+    });
+});
 
 // Use EF Core
 // builder.Services.AddDbContext<ApiDbContext>();
@@ -55,8 +64,22 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 
+// Configure RESTful API
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Configure GraphQL
+app.UseGraphQL();
+app.UseGraphQLPlayground("/");
+
 await app.RunAsync();
+
+public class Query
+{
+    public static string Hero()
+    {
+        return "Luke Skywalker";
+    }
+}
