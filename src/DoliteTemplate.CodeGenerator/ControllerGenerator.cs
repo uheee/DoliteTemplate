@@ -330,7 +330,14 @@ public class ControllerGenerator : ISourceGenerator
         var nodes = xmlDoc.FirstChild.ChildNodes;
         foreach (XmlNode node in nodes)
         {
-            var nodeLines = node.OuterXml.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var nodeLines = node.OuterXml.Split(new[]
+            {
+#if _WINDOWS
+                "\r\n"
+#else
+                "\n"
+#endif
+            }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var nodeLine in nodeLines)
             {
                 foreach (var _ in Enumerable.Range(0, indentLevel))
