@@ -9,23 +9,11 @@ using Microsoft.CodeAnalysis.Text;
 namespace DoliteTemplate.CodeGenerator;
 
 [Generator]
-public class ControllerGenerator : ISourceGenerator
+public class GraphControllerGenerator : ISourceGenerator
 {
     private static readonly IEnumerable<string> ControllerIgnoreAttributes = new[]
     {
         Symbols.Types.Project.ApiServiceAttribute
-    };
-
-    private static readonly Dictionary<string, string> ControllerDefaultAttributes = new()
-    {
-        {
-            Symbols.Types.System.ApiControllerAttribute,
-            Symbols.Types.BuildAttribute(Symbols.Types.System.ApiControllerAttribute)
-        },
-        {
-            Symbols.Types.System.RouteAttribute,
-            Symbols.Types.BuildAttribute(Symbols.Types.System.RouteAttribute, "\"[controller]\"")
-        }
     };
 
     private static readonly IEnumerable<string> MethodIgnoreAttributes = new[]
@@ -98,7 +86,7 @@ public class ControllerGenerator : ISourceGenerator
         builder.AppendLine("#nullable enable").AppendLine();
 
         // Namespace
-        builder.AppendLine($"namespace {Symbols.Namespaces.Project.Controllers};");
+        builder.AppendLine($"namespace {Symbols.Namespaces.Project.Graph};");
         builder.AppendLine();
 
         // Class comments
@@ -113,16 +101,8 @@ public class ControllerGenerator : ISourceGenerator
             builder.AppendLine(attribute);
         }
 
-        var defaultAttributeLines = ControllerDefaultAttributes.Keys
-            .Except(attributes.Select(attribute => attribute.AttributeClass!.ToDisplayString()))
-            .Select(key => ControllerDefaultAttributes[key]);
-        foreach (var attribute in defaultAttributeLines)
-        {
-            builder.AppendLine(attribute);
-        }
-
         // Class header
-        builder.AppendLine($"public partial class {controllerName} : {Symbols.Types.System.ControllerBase}");
+        builder.AppendLine($"public partial class {controllerName} : {Symbols.Types.System.GraphController}");
         builder.AppendLine("{");
 
         // Service member
@@ -134,7 +114,7 @@ public class ControllerGenerator : ISourceGenerator
         // Methods
         if (string.IsNullOrEmpty(rule)) rule = ".*";
 
-        var methods = GetHttpMethods(@class, rule);
+        var methods = GetSchemaMethods(@class, rule);
         foreach (var method in methods)
         {
             GenerateMethod(builder, method, serviceMemberName);
@@ -178,20 +158,12 @@ public class ControllerGenerator : ISourceGenerator
             builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
         }
 
-        // Response types
-        var okResponseAttribute = string.IsNullOrEmpty(resultType)
-            ? Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
-                $"{Symbols.Types.System.StatusCodes}.Status200OK")
-            : Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
-                Symbols.Types.BuildTypeOf(resultType), $"{Symbols.Types.System.StatusCodes}.Status200OK");
-        var badRequestResponseAttribute = Symbols.Types.BuildAttribute(
-            Symbols.Types.System.ProducesResponseTypeAttribute,
-            Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
-            $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
-        foreach (var attribute in new[] { okResponseAttribute, badRequestResponseAttribute })
-        {
-            builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
-        }
+        // Possible types
+        var possibleTypesAttribute = string.IsNullOrEmpty(resultType)
+            ? Symbols.Types.BuildAttribute(Symbols.Types.System.PossibleTypesAttribute)
+            : Symbols.Types.BuildAttribute(Symbols.Types.System.PossibleTypesAttribute,
+                Symbols.Types.BuildTypeOf(resultType));
+        builder.Append(Symbols.Codes.Ident).AppendLine(possibleTypesAttribute);
 
         // Accessibility
         builder.Append(Symbols.Codes.Ident)
@@ -200,9 +172,9 @@ public class ControllerGenerator : ISourceGenerator
         // Is async
         if (isAsync)
             builder.AppendFormat("async {0}<{1}> ", Symbols.Types.System.Task,
-                Symbols.Types.System.ActionResult);
+                Symbols.Types.System.GraphResult);
         else
-            builder.AppendFormat("{0} ", Symbols.Types.System.ActionResult);
+            builder.AppendFormat("{0} ", Symbols.Types.System.GraphResult);
 
         // Method name
         builder.Append(method.Name);
@@ -357,7 +329,7 @@ public class ControllerGenerator : ISourceGenerator
             : fullName;
     }
 
-    private static IEnumerable<IMethodSymbol> GetHttpMethods(ITypeSymbol @class, string rule)
+    private static IEnumerable<IMethodSymbol> GetSchemaMethods(ITypeSymbol @class, string rule)
     {
         var regex = new Regex(rule, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
         var ignoredMethods = new List<IMethodSymbol>();
@@ -384,7 +356,7 @@ public class ControllerGenerator : ISourceGenerator
                     method.Name != ".ctor" &&
                     method is { DeclaredAccessibility: Accessibility.Public, MethodKind: MethodKind.Ordinary } &&
                     !ignoredMethods.Contains(method) &&
-                    HasHttpMethod(method) &&
+                    HasSchemaFlag(method) &&
                     regex.IsMatch(method.Name))
                     yield return method;
             }
@@ -400,12 +372,12 @@ public class ControllerGenerator : ISourceGenerator
         }
     }
 
-    private static bool HasHttpMethod(IMethodSymbol method)
+    private static bool HasSchemaFlag(IMethodSymbol method)
     {
         return method.GetAttributes().Any(attribute =>
-                   attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.System.Mvc &&
-                   attribute.AttributeClass!.Name.StartsWith("Http"))
-               || (method.IsOverride && HasHttpMethod(method.OverriddenMethod!));
+                   attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.System.GraphAttributes &&
+                   (attribute.AttributeClass!.Name.StartsWith("Query") || attribute.AttributeClass!.Name.StartsWith("Mutation")))
+               || (method.IsOverride && HasSchemaFlag(method.OverriddenMethod!));
     }
 
     private static bool IsTransaction(IMethodSymbol method)
