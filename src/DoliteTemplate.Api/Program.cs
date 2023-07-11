@@ -20,6 +20,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(options =>
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddGraphQL(b =>
 {
+    // b.AddAutoSchema<TestService>();
     b.AddAutoSchema<Query>();
     b.AddSystemTextJson(options =>
     {
@@ -72,14 +73,29 @@ app.MapControllers();
 
 // Configure GraphQL
 app.UseGraphQL();
-app.UseGraphQLPlayground("/");
+app.UseGraphQLAltair();
 
 await app.RunAsync();
 
 public class Query
 {
+    // public static TestService Test()
+    // {
+    //     return new TestService { };
+    // }
+
+    public static AA GetAA()
+    {
+        return new AA();
+    }
+
     public static string Hero()
     {
         return "Luke Skywalker";
     }
+}
+
+public class AA
+{
+    public string A => "123";
 }
