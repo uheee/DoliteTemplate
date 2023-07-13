@@ -29,7 +29,7 @@
   <files>
     <file src=".template.config/icon.png" />
     <file src="README.md" />
-    <file src="./**" target="content" exclude="**/bin/**;**/obj/**;**/.vs/**;**/.idea/**;**/.git/**;**/.github/**;**/LICENSE;**/README.md;" />
+    <file src="./**" target="content" exclude="**/bin/**;**/obj/**;**/.vs/**;**/.idea/**;**/.git/**;**/.github/**;**/keys/.gitignore;**/LICENSE;**/README.md;" />
   </files>
 
 </package>
