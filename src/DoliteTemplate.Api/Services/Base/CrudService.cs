@@ -82,23 +82,6 @@ public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto,
     {
         return query;
     }
-
-    protected virtual void ManuallyMarkDirtyChanges(EntityEntry<TEntity> entry, TUpdateDto updateDto)
-    {
-        var properties = typeof(TUpdateDto)
-            .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-            .ToDictionary(property => property.Name);
-
-        foreach (var propertyEntry in entry.Properties)
-        {
-            if (!properties.TryGetValue(propertyEntry.Metadata.Name, out var property))
-            {
-                continue;
-            }
-
-            propertyEntry.IsModified = property.GetValue(updateDto) is not null;
-        }
-    }
 }
 
 public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateUpdateDto> :

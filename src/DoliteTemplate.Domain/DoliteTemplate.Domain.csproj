@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DoliteTemplate.Shared\DoliteTemplate.Shared.csproj"/>
+        <ProjectReference Include="..\DoliteTemplate.Shared\DoliteTemplate.Shared.csproj" />
     </ItemGroup>
 
 </Project>

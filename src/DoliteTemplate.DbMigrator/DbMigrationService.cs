@@ -25,10 +25,13 @@ public class DbMigrationService : BackgroundService
         await dbContext.Database.MigrateAsync(stoppingToken);
 
         Log.Information("Executing SQL scripts...");
-        var dirname = Path.Combine(Directory.GetCurrentDirectory(), "Scripts");
-        await foreach (var script in GetScripts(dirname, stoppingToken))
+        var scriptDir = Path.Combine(Directory.GetCurrentDirectory(), "Scripts");
+        if (Directory.Exists(scriptDir))
         {
-            await dbContext.Database.ExecuteSqlRawAsync(script, stoppingToken);
+            await foreach (var script in GetScripts(scriptDir, stoppingToken))
+            {
+                await dbContext.Database.ExecuteSqlRawAsync(script, stoppingToken);
+            }
         }
 
         Log.Information("Starting data seeding...");

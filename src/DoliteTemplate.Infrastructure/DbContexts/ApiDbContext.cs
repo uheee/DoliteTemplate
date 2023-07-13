@@ -1,6 +1,7 @@
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
+using DoliteTemplate.Domain.Entities;
 using DoliteTemplate.Domain.Entities.Base;
 using DoliteTemplate.Infrastructure.Utils;
 using DoliteTemplate.Shared.Utils;
@@ -18,6 +19,7 @@ public class ApiDbContext : DbContext
     #region Entities
 
     // Add DbSets here
+    public DbSet<Order> Orders { get; init; } = null!;
 
     #endregion
 
@@ -58,7 +60,7 @@ public class ApiDbContext : DbContext
             builder.UseNpgsql(_connectionString);
         }
 
-        builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        // builder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
