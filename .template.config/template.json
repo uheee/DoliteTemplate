@@ -33,7 +33,8 @@
             "**/.idea/**",
             "**/.git/**",
             "**/.github/**",
-            "**/keys/.gitignore"
+            "**/keys/.gitignore",
+            "**/Migrations/**"
           ]
         }
       ]
