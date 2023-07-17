@@ -78,7 +78,7 @@ public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto,
 
     public abstract Task<int> DeleteRange(IEnumerable<TKey> ids);
 
-    protected virtual IQueryable<TEntity> AfterQuery(IQueryable<TEntity> query)
+    public virtual IQueryable<TEntity> AfterQuery(IQueryable<TEntity> query)
     {
         return query;
     }

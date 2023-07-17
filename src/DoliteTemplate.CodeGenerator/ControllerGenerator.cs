@@ -141,6 +141,8 @@ public class ControllerGenerator : ISourceGenerator
             builder.AppendLine();
         }
 
+        GenerateQueryMethods(builder, @class, serviceMemberName);
+
         builder.AppendLine("}");
 
         return filename;
@@ -272,6 +274,115 @@ public class ControllerGenerator : ISourceGenerator
         builder.Append(Symbols.Codes.Ident).AppendLine("}");
     }
 
+    private static void GenerateQueryMethods(StringBuilder builder, ITypeSymbol @class, string serviceMemberName)
+    {
+        var baseType = @class.BaseType;
+        if ($"{baseType?.ContainingNamespace}.{baseType?.Name}" != Symbols.Types.Project.EntityCrudService) return;
+
+        var entity = baseType!.TypeArguments[2];
+        var dto = baseType!.TypeArguments[3];
+        var properties = entity.GetMembers().OfType<IPropertySymbol>();
+        var queryArgs = new List<(IPropertySymbol property, string name, string comparor, object? @default)>();
+        foreach (var property in properties)
+        {
+            var queryParameters = GetQueryParameters(property).ToArray();
+            var queryParameterArgs = queryParameters.Select(attribute =>
+            {
+                var name = Extensions.ToCamelCase(property.Name);
+                var comparor = "==";
+                object? @default = null;
+                foreach (var argPair in attribute.NamedArguments)
+                    switch (argPair.Key)
+                    {
+                        case "Name":
+                            name = (string?)argPair.Value.Value;
+                            break;
+                        case "Comparor":
+                            comparor = (string)argPair.Value.Value! switch
+                            {
+                                "LtE" => "<=",
+                                "GtE" => ">=",
+                                _ => comparor
+                            };
+                            break;
+                        case "Default":
+                            @default = argPair.Value.Value;
+                            break;
+                    }
+
+                return (property, name!, comparor, @default);
+            });
+            queryArgs.AddRange(queryParameterArgs);
+        }
+
+        if (!queryArgs.Any()) return;
+
+        // Method attributes
+        var httpGetAttribute = Symbols.Types.BuildAttribute(Symbols.Types.System.HttpGetAttribute);
+        var routeAttribute =
+            Symbols.Types.BuildAttribute(Symbols.Types.System.RouteAttribute, GetCodeDisplayValue("query"));
+        var okResponseAttribute = Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
+            Symbols.Types.BuildTypeOf($"{Symbols.Types.System.Enumerable}<{dto}>"),
+            $"{Symbols.Types.System.StatusCodes}.Status200OK");
+        var badRequestResponseAttribute = Symbols.Types.BuildAttribute(
+            Symbols.Types.System.ProducesResponseTypeAttribute,
+            Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
+            $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
+        foreach (var attribute in new[] {
+                     httpGetAttribute,
+                     routeAttribute,
+                     okResponseAttribute,
+                     badRequestResponseAttribute
+                 })
+            builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
+
+        // Method name
+        builder.Append(Symbols.Codes.Ident)
+            .AppendFormat("public async {0}<{1}> ", Symbols.Types.System.Task, Symbols.Types.System.ActionResult);
+        builder.Append("QueryWhere");
+
+        // Parameters definitions
+        builder.Append("(");
+        var lastQueryArg = queryArgs.Last();
+        foreach (var (property, name, _, @default) in queryArgs)
+        {
+            var definition = $"{property.Type} {name}";
+            builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident).Append(definition);
+            if (@default is not null) builder.AppendFormat(" = {0}", GetCodeDisplayValue(@default));
+            if (!ReferenceEquals(lastQueryArg.property, property)) builder.AppendLine(",");
+        }
+        builder.AppendLine(")");
+
+        // Method body
+        builder.Append(Symbols.Codes.Ident).AppendLine("{");
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
+        builder.AppendFormat("var query = {0}.DbContext.Set<{1}>()", serviceMemberName, entity);
+
+        foreach (var (property, name, comparor, _) in queryArgs)
+        {
+            builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
+            builder.AppendFormat(".Where({0} => {0}.{1} {2} {3})", "entity", property.Name, comparor, name);
+        }
+
+        builder.AppendLine(";");
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+            .AppendFormat("query = {0}.AfterQuery(query);", serviceMemberName).AppendLine();
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+            .AppendFormat("var result = await {0}.ToArrayAsync(query);", Symbols.Types.System.EfCoreExt)
+            .AppendLine();
+        builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+            .AppendFormat("return Ok({0}.Mapper.Map<{1}<{2}>>(result));", serviceMemberName, Symbols.Types.System.Enumerable, dto)
+            .AppendLine();
+        builder.Append(Symbols.Codes.Ident).AppendLine("}");
+    }
+
+    private static IEnumerable<AttributeData> GetQueryParameters(IPropertySymbol property)
+    {
+        return property.GetAttributes().Where(attribute =>
+                   attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.Project.Shared &&
+                   attribute.AttributeClass!.Name == nameof(Symbols.Types.Project.QueryParameterAttribute));
+    }
+
     private static INamedTypeSymbol TrimNullable(INamedTypeSymbol type)
     {
         if (type.NullableAnnotation != NullableAnnotation.Annotated)
@@ -330,14 +441,7 @@ public class ControllerGenerator : ISourceGenerator
         var nodes = xmlDoc.FirstChild.ChildNodes;
         foreach (XmlNode node in nodes)
         {
-            var nodeLines = node.OuterXml.Split(new[]
-            {
-#if _WINDOWS
-                "\r\n"
-#else
-                "\n"
-#endif
-            }, StringSplitOptions.RemoveEmptyEntries);
+            var nodeLines = node.OuterXml.Split(new[] { Symbols.Codes.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var nodeLine in nodeLines)
             {
                 foreach (var _ in Enumerable.Range(0, indentLevel))

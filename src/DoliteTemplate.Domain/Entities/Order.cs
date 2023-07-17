@@ -1,5 +1,5 @@
 using DoliteTemplate.Domain.Entities.Base;
-using DoliteTemplate.Domain.Utils;
+using DoliteTemplate.Shared;
 
 namespace DoliteTemplate.Domain.Entities;
 
