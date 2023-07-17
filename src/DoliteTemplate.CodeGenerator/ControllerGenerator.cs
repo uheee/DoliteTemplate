@@ -347,7 +347,14 @@ public class ControllerGenerator : ISourceGenerator
         builder.Append(Symbols.Codes.Ident).AppendLine("/// <summary>");
         builder.Append(Symbols.Codes.Ident).AppendLine("/// Query by parameters");
         builder.Append(Symbols.Codes.Ident).AppendLine("/// </summary>");
-        foreach (var (property, name, comparor, @default, ignoreWhenNull, description) in queryArgs)
+        if (paginated)
+        {
+            builder.Append(Symbols.Codes.Ident)
+                .AppendLine(@"/// <param name=""pageIndex"">Page index (start from 1)</param>");
+            builder.Append(Symbols.Codes.Ident)
+                .AppendLine(@"/// <param name=""pageSize"">Page size</param>");
+        }
+        foreach (var (_, name, _, _, _, description) in queryArgs)
         {
             builder.Append(Symbols.Codes.Ident)
                 .AppendFormat(@"/// <param name=""{0}"">{1}</param>", name, description)
@@ -389,7 +396,7 @@ public class ControllerGenerator : ISourceGenerator
         if (paginated)
         {
             builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
-                .AppendLine("int pageIndex, int pageSize,");
+                .Append("int pageIndex, int pageSize,");
         }
         var lastQueryArg = queryArgs.Last();
         foreach (var (property, name, _, @default, ignoreWhenNull, _) in queryArgs)
