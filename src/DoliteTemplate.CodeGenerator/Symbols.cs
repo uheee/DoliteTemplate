@@ -23,6 +23,7 @@ public static class Symbols
             public const string Domain = "DoliteTemplate.Domain";
             public const string EntityBase = $"{Domain}.Entity.Base";
             public const string Shared = "DoliteTemplate.Shared";
+            public const string InfraUtils = "DoliteTemplate.Infrastructure.Utils";
         }
     }
 
@@ -72,6 +73,7 @@ public static class Symbols
             public const string ApiServiceAttribute = $"{Namespaces.Project.Api}.Utils.ApiServiceAttribute";
             public const string TransactionAttribute = $"{Namespaces.Project.Api}.Utils.TransactionAttribute";
             public const string QueryParameterAttribute = $"{Namespaces.Project.Shared}.QueryParameterAttribute";
+            public const string PaginatedList = $"{Namespaces.Project.Shared}.Utils.PaginatedList";
         }
     }
 
