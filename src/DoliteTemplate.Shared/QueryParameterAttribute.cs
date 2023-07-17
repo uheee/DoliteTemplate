@@ -7,6 +7,7 @@ public class QueryParameterAttribute : Attribute
     public QueryParameterComparor Comparor { get; set; }
     public object? Default { get; set; }
     public bool IgnoreWhenNull { get; set; }
+    public string? Description { get; set; }
 }
 
 public enum QueryParameterComparor

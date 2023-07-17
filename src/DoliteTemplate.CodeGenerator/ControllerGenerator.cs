@@ -291,7 +291,8 @@ public class ControllerGenerator : ISourceGenerator
             string name,
             string comparor,
             object? @default,
-            bool ignoreWhenNull)>();
+            bool ignoreWhenNull,
+            string? description)>();
         foreach (var property in properties)
         {
             var queryParameters = GetQueryParameters(property).ToArray();
@@ -301,6 +302,7 @@ public class ControllerGenerator : ISourceGenerator
                 var comparor = "==";
                 object? @default = null;
                 var ignoreWhenNull = true;
+                string? description = null;
                 foreach (var argPair in attribute.NamedArguments)
                     switch (argPair.Key)
                     {
@@ -321,9 +323,12 @@ public class ControllerGenerator : ISourceGenerator
                         case "IgnoreWhenNull":
                             ignoreWhenNull = (bool)argPair.Value.Value!;
                             break;
+                        case "Description":
+                            description = (string)argPair.Value.Value!;
+                            break;
                     }
 
-                return (property, name!, comparor, @default, ignoreWhenNull);
+                return (property, name!, comparor, @default, ignoreWhenNull, description);
             });
             queryArgs.AddRange(queryParameterArgs);
         }
@@ -335,9 +340,23 @@ public class ControllerGenerator : ISourceGenerator
     }
 
     private static void WriteQueryMethod(StringBuilder builder, ITypeSymbol entity, ITypeSymbol dto,
-        List<(IPropertySymbol property, string name, string comparor, object? @default, bool ignoreWhenNull)>
-            queryArgs, string serviceMemberName, bool paginated)
+        List<(IPropertySymbol property, string name, string comparor, object? @default, bool ignoreWhenNull, string?
+            description)> queryArgs, string serviceMemberName, bool paginated)
     {
+        // Method comments
+        builder.Append(Symbols.Codes.Ident).AppendLine("/// <summary>");
+        builder.Append(Symbols.Codes.Ident).AppendLine("/// Query by parameters");
+        builder.Append(Symbols.Codes.Ident).AppendLine("/// </summary>");
+        foreach (var (property, name, comparor, @default, ignoreWhenNull, description) in queryArgs)
+        {
+            builder.Append(Symbols.Codes.Ident)
+                .AppendFormat(@"/// <param name=""{0}"">{1}</param>", name, description)
+                .AppendLine();
+        }
+
+        builder.Append(Symbols.Codes.Ident).AppendFormat("/// <returns>{0}</returns>",
+            paginated ? "The paginated queried entities" : "The queried entities").AppendLine();
+
         // Method attributes
         var httpGetAttribute = Symbols.Types.BuildAttribute(Symbols.Types.System.HttpGetAttribute);
         var routeAttribute =
@@ -368,7 +387,7 @@ public class ControllerGenerator : ISourceGenerator
         // Parameters definitions
         builder.Append("(");
         var lastQueryArg = queryArgs.Last();
-        foreach (var (property, name, _, @default, ignoreWhenNull) in queryArgs)
+        foreach (var (property, name, _, @default, ignoreWhenNull, _) in queryArgs)
         {
             builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
                 .AppendFormat("{0}{1} {2}", property.Type, ignoreWhenNull ? "?" : string.Empty, name);
@@ -382,7 +401,7 @@ public class ControllerGenerator : ISourceGenerator
         builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
         builder.AppendFormat("var query = {0}.DbContext.Set<{1}>()", serviceMemberName, entity);
 
-        foreach (var (property, name, comparor, _, ignoreWhenNull) in queryArgs)
+        foreach (var (property, name, comparor, _, ignoreWhenNull, _) in queryArgs)
         {
             builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
             builder.AppendFormat(

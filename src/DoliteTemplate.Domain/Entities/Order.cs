@@ -5,6 +5,6 @@ namespace DoliteTemplate.Domain.Entities;
 
 public class Order : AuditedSoftDeletableEntity
 {
-    [QueryParameter(Default = "hello")]
+    [QueryParameter(Default = "hello", Description = "This is NO!")]
     public string No { get; set; } = null!;
 }
