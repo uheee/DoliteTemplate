@@ -94,8 +94,10 @@ public class ControllerGenerator : ISourceGenerator
         var controllerName = entityName + Symbols.Suffixes.Controller;
         var filename = $"{controllerName}.g.cs";
 
-        // Nullable macro
-        builder.AppendLine("#nullable enable").AppendLine();
+        // Macro
+        builder.AppendLine("#pragma warning disable");
+        builder.AppendLine("#nullable enable");
+        builder.AppendLine();
 
         // Using namespaces
         builder.AppendFormat("using {0};", Symbols.Namespaces.Project.InfraUtils).AppendLine();
@@ -299,31 +301,36 @@ public class ControllerGenerator : ISourceGenerator
             var queryParameterArgs = queryParameters.Select(attribute =>
             {
                 var name = Extensions.ToCamelCase(property.Name);
-                var comparor = "==";
+                var comparor = "{0} == {1}";
                 object? @default = null;
                 var ignoreWhenNull = true;
                 string? description = null;
                 foreach (var argPair in attribute.NamedArguments)
-                    switch (argPair.Key)
+                    switch (Extensions.ToCamelCase(argPair.Key))
                     {
-                        case "Name":
+                        case nameof(name):
                             name = (string?)argPair.Value.Value;
                             break;
-                        case "Comparor":
-                            comparor = (string)argPair.Value.Value! switch
+                        case nameof(comparor):
+                            comparor = ((string)argPair.Value.Value!).ToLower() switch
                             {
-                                "LtE" => "<=",
-                                "GtE" => ">=",
-                                _ => comparor
+                                null => comparor,
+                                "eq" => "{0} == {1}",
+                                "lt" => "{0} < {1}",
+                                "gt" => "{0} > {1}",
+                                "lte" => "{0} <= {1}",
+                                "gte" => "{0} >= {1}",
+                                "contains" => "{0}.Contains({1})",
+                                var other => other
                             };
                             break;
-                        case "Default":
+                        case nameof(@default):
                             @default = argPair.Value.Value;
                             break;
-                        case "IgnoreWhenNull":
+                        case nameof(ignoreWhenNull):
                             ignoreWhenNull = (bool)argPair.Value.Value!;
                             break;
-                        case "Description":
+                        case nameof(description):
                             description = (string)argPair.Value.Value!;
                             break;
                     }
@@ -336,6 +343,7 @@ public class ControllerGenerator : ISourceGenerator
         if (!queryArgs.Any()) return;
 
         WriteQueryMethod(builder, entity, dto, queryArgs, serviceMemberName, false);
+        builder.AppendLine();
         WriteQueryMethod(builder, entity, dto, queryArgs, serviceMemberName, true);
     }
 
@@ -416,9 +424,20 @@ public class ControllerGenerator : ISourceGenerator
         foreach (var (property, name, comparor, _, ignoreWhenNull, _) in queryArgs)
         {
             builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
-            builder.AppendFormat(
-                ignoreWhenNull ? ".WhereIf({3} is not null, {0} => {0}.{1} {2} {3})" : ".Where({0} => {0}.{1} {2} {3})",
-                "entity", property.Name, comparor, name);
+            const string entitySymbol = "entity";
+            var queryCondition = string.Format(comparor, $"{entitySymbol}.{property.Name}", name);
+            if (ignoreWhenNull)
+            {
+                var nullCheck = property.Type.ToDisplayString() == "string"
+                    ? $"!string.IsNullOrEmpty({name})"
+                    : $"{name} is not null";
+                builder.AppendFormat(
+                    ".WhereIf({2}, {0} => {1})", entitySymbol, queryCondition, nullCheck);
+            }
+            else
+            {
+                builder.AppendFormat(".Where({0} => {1})", entitySymbol, queryCondition);
+            }
         }
 
         builder.AppendLine(";");
