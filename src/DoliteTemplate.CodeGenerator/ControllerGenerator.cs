@@ -94,10 +94,16 @@ public class ControllerGenerator : ISourceGenerator
         var controllerName = entityName + Symbols.Suffixes.Controller;
         var filename = $"{controllerName}.g.cs";
 
-        // nullable macro
-        builder.AppendLine("#nullable enable").AppendLine();
+        // Macro
+        builder.AppendLine("#pragma warning disable");
+        builder.AppendLine("#nullable enable");
+        builder.AppendLine();
 
-        // Namespace
+        // Using namespaces
+        builder.AppendFormat("using {0};", Symbols.Namespaces.Project.InfraUtils).AppendLine();
+        builder.AppendFormat("using {0};", Symbols.Namespaces.System.EfCore).AppendLine();
+
+        // Self namespace
         builder.AppendLine($"namespace {Symbols.Namespaces.Project.Controllers};");
         builder.AppendLine();
 
@@ -140,6 +146,8 @@ public class ControllerGenerator : ISourceGenerator
             GenerateMethod(builder, method, serviceMemberName);
             builder.AppendLine();
         }
+
+        GenerateQueryMethods(builder, @class, serviceMemberName);
 
         builder.AppendLine("}");
 
@@ -272,6 +280,187 @@ public class ControllerGenerator : ISourceGenerator
         builder.Append(Symbols.Codes.Ident).AppendLine("}");
     }
 
+    private static void GenerateQueryMethods(StringBuilder builder, ITypeSymbol @class, string serviceMemberName)
+    {
+        var baseType = @class.BaseType;
+        if ($"{baseType?.ContainingNamespace}.{baseType?.Name}" != Symbols.Types.Project.EntityCrudService) return;
+
+        var entity = baseType!.TypeArguments[2];
+        var dto = baseType!.TypeArguments[3];
+        var properties = entity.GetMembers().OfType<IPropertySymbol>();
+        var queryArgs = new List<(
+            IPropertySymbol property,
+            string name,
+            string comparor,
+            object? @default,
+            bool ignoreWhenNull,
+            string? description)>();
+        foreach (var property in properties)
+        {
+            var queryParameters = GetQueryParameters(property).ToArray();
+            var queryParameterArgs = queryParameters.Select(attribute =>
+            {
+                var name = Extensions.ToCamelCase(property.Name);
+                var comparor = "{0} == {1}";
+                object? @default = null;
+                var ignoreWhenNull = true;
+                string? description = null;
+                foreach (var argPair in attribute.NamedArguments)
+                    switch (Extensions.ToCamelCase(argPair.Key))
+                    {
+                        case nameof(name):
+                            name = (string?)argPair.Value.Value;
+                            break;
+                        case nameof(comparor):
+                            comparor = ((string)argPair.Value.Value!).ToLower() switch
+                            {
+                                null => comparor,
+                                "eq" => "{0} == {1}",
+                                "lt" => "{0} < {1}",
+                                "gt" => "{0} > {1}",
+                                "lte" => "{0} <= {1}",
+                                "gte" => "{0} >= {1}",
+                                "contains" => "{0}.Contains({1})",
+                                var other => other
+                            };
+                            break;
+                        case nameof(@default):
+                            @default = argPair.Value.Value;
+                            break;
+                        case nameof(ignoreWhenNull):
+                            ignoreWhenNull = (bool)argPair.Value.Value!;
+                            break;
+                        case nameof(description):
+                            description = (string)argPair.Value.Value!;
+                            break;
+                    }
+
+                return (property, name!, comparor, @default, ignoreWhenNull, description);
+            });
+            queryArgs.AddRange(queryParameterArgs);
+        }
+
+        if (!queryArgs.Any()) return;
+
+        WriteQueryMethod(builder, entity, dto, queryArgs, serviceMemberName, false);
+        builder.AppendLine();
+        WriteQueryMethod(builder, entity, dto, queryArgs, serviceMemberName, true);
+    }
+
+    private static void WriteQueryMethod(StringBuilder builder, ITypeSymbol entity, ITypeSymbol dto,
+        List<(IPropertySymbol property, string name, string comparor, object? @default, bool ignoreWhenNull, string?
+            description)> queryArgs, string serviceMemberName, bool paginated)
+    {
+        // Method comments
+        builder.Append(Symbols.Codes.Ident).AppendLine("/// <summary>");
+        builder.Append(Symbols.Codes.Ident).AppendLine("/// Query by parameters");
+        builder.Append(Symbols.Codes.Ident).AppendLine("/// </summary>");
+        if (paginated)
+        {
+            builder.Append(Symbols.Codes.Ident)
+                .AppendLine(@"/// <param name=""pageIndex"">Page index (start from 1)</param>");
+            builder.Append(Symbols.Codes.Ident)
+                .AppendLine(@"/// <param name=""pageSize"">Page size</param>");
+        }
+        foreach (var (_, name, _, _, _, description) in queryArgs)
+        {
+            builder.Append(Symbols.Codes.Ident)
+                .AppendFormat(@"/// <param name=""{0}"">{1}</param>", name, description)
+                .AppendLine();
+        }
+
+        builder.Append(Symbols.Codes.Ident).AppendFormat("/// <returns>{0}</returns>",
+            paginated ? "The paginated queried entities" : "The queried entities").AppendLine();
+
+        // Method attributes
+        var httpGetAttribute = Symbols.Types.BuildAttribute(Symbols.Types.System.HttpGetAttribute);
+        var routeAttribute =
+            Symbols.Types.BuildAttribute(Symbols.Types.System.RouteAttribute,
+                GetCodeDisplayValue(paginated ? "paging/query" : "query"));
+        var okResponseAttribute = Symbols.Types.BuildAttribute(Symbols.Types.System.ProducesResponseTypeAttribute,
+            Symbols.Types.BuildTypeOf(
+                $"{(paginated ? Symbols.Types.Project.PaginatedList : Symbols.Types.System.Enumerable)}<{dto}>"),
+            $"{Symbols.Types.System.StatusCodes}.Status200OK");
+        var badRequestResponseAttribute = Symbols.Types.BuildAttribute(
+            Symbols.Types.System.ProducesResponseTypeAttribute,
+            Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
+            $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
+        foreach (var attribute in new[] {
+                     httpGetAttribute,
+                     routeAttribute,
+                     okResponseAttribute,
+                     badRequestResponseAttribute
+                 })
+            builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
+
+        // Method name
+        builder.Append(Symbols.Codes.Ident)
+            .AppendFormat("public async {0}<{1}> ", Symbols.Types.System.Task, Symbols.Types.System.ActionResult);
+        builder.Append("GetWhere");
+        if (paginated) builder.Append("Paged");
+
+        // Parameters definitions
+        builder.Append("(");
+        if (paginated)
+        {
+            builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+                .Append("int pageIndex, int pageSize,");
+        }
+        var lastQueryArg = queryArgs.Last();
+        foreach (var (property, name, _, @default, ignoreWhenNull, _) in queryArgs)
+        {
+            builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+                .AppendFormat("{0}{1} {2}", property.Type, ignoreWhenNull ? "?" : string.Empty, name);
+            if (ignoreWhenNull || @default is not null) builder.AppendFormat(" = {0}", GetCodeDisplayValue(@default));
+            if (!ReferenceEquals(lastQueryArg.property, property)) builder.AppendLine(",");
+        }
+        builder.AppendLine(")");
+
+        // Method body
+        builder.Append(Symbols.Codes.Ident).AppendLine("{");
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
+        builder.AppendFormat("var query = {0}.DbContext.Set<{1}>()", serviceMemberName, entity);
+
+        foreach (var (property, name, comparor, _, ignoreWhenNull, _) in queryArgs)
+        {
+            builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
+            const string entitySymbol = "entity";
+            var queryCondition = string.Format(comparor, $"{entitySymbol}.{property.Name}", name);
+            if (ignoreWhenNull)
+            {
+                var nullCheck = property.Type.ToDisplayString() == "string"
+                    ? $"!string.IsNullOrEmpty({name})"
+                    : $"{name} is not null";
+                builder.AppendFormat(
+                    ".WhereIf({2}, {0} => {1})", entitySymbol, queryCondition, nullCheck);
+            }
+            else
+            {
+                builder.AppendFormat(".Where({0} => {1})", entitySymbol, queryCondition);
+            }
+        }
+
+        builder.AppendLine(";");
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+            .AppendFormat("query = {0}.AfterQuery(query);", serviceMemberName).AppendLine();
+        builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+            .AppendFormat("var result = await query.{0};",
+                paginated ? "ToPagedListAsync(pageIndex, pageSize)" : "ToArrayAsync()")
+            .AppendLine();
+        builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+            .AppendFormat("return Ok({0}.Mapper.Map<{1}<{2}>>(result));", serviceMemberName,
+                paginated ? Symbols.Types.Project.PaginatedList : Symbols.Types.System.Enumerable, dto)
+            .AppendLine();
+        builder.Append(Symbols.Codes.Ident).AppendLine("}");
+    }
+
+    private static IEnumerable<AttributeData> GetQueryParameters(IPropertySymbol property)
+    {
+        return property.GetAttributes().Where(attribute =>
+                   attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.Project.Shared &&
+                   attribute.AttributeClass!.Name == nameof(Symbols.Types.Project.QueryParameterAttribute));
+    }
+
     private static INamedTypeSymbol TrimNullable(INamedTypeSymbol type)
     {
         if (type.NullableAnnotation != NullableAnnotation.Annotated)
@@ -330,14 +519,7 @@ public class ControllerGenerator : ISourceGenerator
         var nodes = xmlDoc.FirstChild.ChildNodes;
         foreach (XmlNode node in nodes)
         {
-            var nodeLines = node.OuterXml.Split(new[]
-            {
-#if _WINDOWS
-                "\r\n"
-#else
-                "\n"
-#endif
-            }, StringSplitOptions.RemoveEmptyEntries);
+            var nodeLines = node.OuterXml.Split(new[] { Symbols.Codes.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var nodeLine in nodeLines)
             {
                 foreach (var _ in Enumerable.Range(0, indentLevel))
