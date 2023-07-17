@@ -4,7 +4,6 @@ using DoliteTemplate.Domain.DTOs.Order;
 using DoliteTemplate.Domain.Entities;
 using DoliteTemplate.Domain.Services;
 using DoliteTemplate.Infrastructure.DbContexts;
-using Microsoft.EntityFrameworkCore;
 
 namespace DoliteTemplate.Api.Services;
 

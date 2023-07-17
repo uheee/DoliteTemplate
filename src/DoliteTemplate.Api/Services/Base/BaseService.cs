@@ -26,7 +26,10 @@ public class BaseService<TService> : BaseService, ICulturalResource<TService>
     {
         var errTemplate = Localizer[errCode];
         var errMsg = string.Format(errTemplate, args);
-        if (string.IsNullOrEmpty(errMsg)) errMsg = "unknown";
+        if (string.IsNullOrEmpty(errMsg))
+        {
+            errMsg = "unknown";
+        }
 
         return new BusinessException(errCode, errMsg);
     }

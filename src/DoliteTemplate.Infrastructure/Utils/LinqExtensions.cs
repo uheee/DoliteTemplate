@@ -10,9 +10,15 @@ public static class LinqExtensions
     public static PaginatedList<TEntity> ToPagedList<TEntity>(this IQueryable<TEntity> queryable, int pageIndex,
         int pageSize)
     {
-        if (pageIndex < 1) pageIndex = 1;
+        if (pageIndex < 1)
+        {
+            pageIndex = 1;
+        }
 
-        if (pageSize < 1) pageSize = 10;
+        if (pageSize < 1)
+        {
+            pageSize = 10;
+        }
 
         var count = queryable.LongCount();
         var items = queryable.Skip(pageSize * (pageIndex - 1)).Take(pageSize)
@@ -23,9 +29,15 @@ public static class LinqExtensions
     public static async Task<PaginatedList<TEntity>> ToPagedListAsync<TEntity>(this IQueryable<TEntity> queryable,
         int pageIndex, int pageSize)
     {
-        if (pageIndex < 1) pageIndex = 1;
+        if (pageIndex < 1)
+        {
+            pageIndex = 1;
+        }
 
-        if (pageSize < 1) pageSize = 10;
+        if (pageSize < 1)
+        {
+            pageSize = 10;
+        }
 
         var count = await queryable.LongCountAsync();
         var items = await queryable.Skip(pageSize * (pageIndex - 1)).Take(pageSize)

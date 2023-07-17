@@ -1,25 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
-    <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <UserSecretsId>dotnet-Migrator-4CF37A80-6EB9-4452-8940-82EFACFE496A</UserSecretsId>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Migrator-4CF37A80-6EB9-4452-8940-82EFACFE496A</UserSecretsId>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.8"/>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.8">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
-      <PackageReference Include="Serilog" Version="3.0.1"/>
-      <PackageReference Include="Serilog.Extensions.Hosting" Version="7.0.0"/>
-      <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0"/>
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.8"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
+    <PackageReference Include="Serilog" Version="3.0.1"/>
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="7.0.0"/>
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0"/>
+  </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\DoliteTemplate.Infrastructure\DoliteTemplate.Infrastructure.csproj"/>
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DoliteTemplate.Infrastructure\DoliteTemplate.Infrastructure.csproj"/>
+  </ItemGroup>
 </Project>

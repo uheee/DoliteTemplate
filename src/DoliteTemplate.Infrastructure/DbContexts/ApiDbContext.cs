@@ -49,7 +49,10 @@ public class ApiDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder builder)
     {
-        if (builder.IsConfigured) return;
+        if (builder.IsConfigured)
+        {
+            return;
+        }
 
         if (_connection is not null)
         {

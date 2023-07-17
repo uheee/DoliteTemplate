@@ -57,11 +57,16 @@ public class ControllerGenerator : ISourceGenerator
                          .Where(cd => cd.DescendantNodes().OfType<AttributeSyntax>().Any()))
             {
                 var @class = semanticModel.GetDeclaredSymbol(classDeclaration);
-                if (@class is null) continue;
+                if (@class is null)
+                {
+                    continue;
+                }
 
                 if (!@class.GetAttributes().Any(attribute =>
                         attribute.AttributeClass!.ToDisplayString() == Symbols.Types.Project.ApiServiceAttribute))
+                {
                     continue;
+                }
 
                 var sourceBuilder = new StringBuilder();
                 var filename = GenerateController(sourceBuilder, @class);
@@ -80,6 +85,7 @@ public class ControllerGenerator : ISourceGenerator
         string? tag = null;
         var rule = string.Empty;
         foreach (var argPair in apiServiceAttribute.NamedArguments)
+        {
             switch (argPair.Key)
             {
                 case "Tag":
@@ -89,6 +95,7 @@ public class ControllerGenerator : ISourceGenerator
                     rule = (string)argPair.Value.Value!;
                     break;
             }
+        }
 
         var entityName = tag ?? GetNameExcludingSuffix(serviceName, Symbols.Suffixes.Service);
         var controllerName = entityName + Symbols.Suffixes.Controller;
@@ -138,7 +145,10 @@ public class ControllerGenerator : ISourceGenerator
             .AppendLine();
 
         // Methods
-        if (string.IsNullOrEmpty(rule)) rule = ".*";
+        if (string.IsNullOrEmpty(rule))
+        {
+            rule = ".*";
+        }
 
         var methods = GetHttpMethods(@class, rule);
         foreach (var method in methods)
@@ -207,10 +217,14 @@ public class ControllerGenerator : ISourceGenerator
 
         // Is async
         if (isAsync)
+        {
             builder.AppendFormat("async {0}<{1}> ", Symbols.Types.System.Task,
                 Symbols.Types.System.ActionResult);
+        }
         else
+        {
             builder.AppendFormat("{0} ", Symbols.Types.System.ActionResult);
+        }
 
         // Method name
         builder.Append(method.Name);
@@ -218,12 +232,18 @@ public class ControllerGenerator : ISourceGenerator
         // Parameter definitions
         builder.Append("(");
         var lastParameter = method.Parameters.LastOrDefault();
-        if (lastParameter is not null) builder.AppendLine();
+        if (lastParameter is not null)
+        {
+            builder.AppendLine();
+        }
 
         foreach (var parameter in method.Parameters)
         {
             GenerateParameterDefinition(builder, parameter);
-            if (!ReferenceEquals(lastParameter, parameter)) builder.AppendLine(",");
+            if (!ReferenceEquals(lastParameter, parameter))
+            {
+                builder.AppendLine(",");
+            }
         }
 
         builder.AppendLine(")");
@@ -242,21 +262,33 @@ public class ControllerGenerator : ISourceGenerator
         }
 
         builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
-        if (hasResult) builder.Append("var result = ");
+        if (hasResult)
+        {
+            builder.Append("var result = ");
+        }
 
-        if (isAsync) builder.Append("await ");
+        if (isAsync)
+        {
+            builder.Append("await ");
+        }
 
         builder.AppendFormat("{0}.{1}", serviceMemberName, method.Name);
 
         // Parameter usages
         builder.Append("(");
         lastParameter = method.Parameters.LastOrDefault();
-        if (lastParameter is not null) builder.AppendLine();
+        if (lastParameter is not null)
+        {
+            builder.AppendLine();
+        }
 
         foreach (var parameter in method.Parameters)
         {
             GenerateParameterUsage(builder, parameter);
-            if (!ReferenceEquals(lastParameter, parameter)) builder.AppendLine(",");
+            if (!ReferenceEquals(lastParameter, parameter))
+            {
+                builder.AppendLine(",");
+            }
         }
 
         builder.AppendLine(");");
@@ -273,7 +305,10 @@ public class ControllerGenerator : ISourceGenerator
 
         // Return
         builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident).Append("return Ok(");
-        if (hasResult) builder.Append("result");
+        if (hasResult)
+        {
+            builder.Append("result");
+        }
 
         builder.AppendLine(");");
 
@@ -283,7 +318,10 @@ public class ControllerGenerator : ISourceGenerator
     private static void GenerateQueryMethods(StringBuilder builder, ITypeSymbol @class, string serviceMemberName)
     {
         var baseType = @class.BaseType;
-        if ($"{baseType?.ContainingNamespace}.{baseType?.Name}" != Symbols.Types.Project.EntityCrudService) return;
+        if ($"{baseType?.ContainingNamespace}.{baseType?.Name}" != Symbols.Types.Project.EntityCrudService)
+        {
+            return;
+        }
 
         var entity = baseType!.TypeArguments[2];
         var dto = baseType!.TypeArguments[3];
@@ -306,6 +344,7 @@ public class ControllerGenerator : ISourceGenerator
                 var ignoreWhenNull = true;
                 string? description = null;
                 foreach (var argPair in attribute.NamedArguments)
+                {
                     switch (Extensions.ToCamelCase(argPair.Key))
                     {
                         case nameof(name):
@@ -334,13 +373,17 @@ public class ControllerGenerator : ISourceGenerator
                             description = (string)argPair.Value.Value!;
                             break;
                     }
+                }
 
                 return (property, name!, comparor, @default, ignoreWhenNull, description);
             });
             queryArgs.AddRange(queryParameterArgs);
         }
 
-        if (!queryArgs.Any()) return;
+        if (!queryArgs.Any())
+        {
+            return;
+        }
 
         WriteQueryMethod(builder, entity, dto, queryArgs, serviceMemberName, false);
         builder.AppendLine();
@@ -362,6 +405,7 @@ public class ControllerGenerator : ISourceGenerator
             builder.Append(Symbols.Codes.Ident)
                 .AppendLine(@"/// <param name=""pageSize"">Page size</param>");
         }
+
         foreach (var (_, name, _, _, _, description) in queryArgs)
         {
             builder.Append(Symbols.Codes.Ident)
@@ -385,19 +429,22 @@ public class ControllerGenerator : ISourceGenerator
             Symbols.Types.System.ProducesResponseTypeAttribute,
             Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
             $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
-        foreach (var attribute in new[] {
-                     httpGetAttribute,
-                     routeAttribute,
-                     okResponseAttribute,
-                     badRequestResponseAttribute
+        foreach (var attribute in new[]
+                 {
+                     httpGetAttribute, routeAttribute, okResponseAttribute, badRequestResponseAttribute
                  })
+        {
             builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
+        }
 
         // Method name
         builder.Append(Symbols.Codes.Ident)
             .AppendFormat("public async {0}<{1}> ", Symbols.Types.System.Task, Symbols.Types.System.ActionResult);
         builder.Append("GetWhere");
-        if (paginated) builder.Append("Paged");
+        if (paginated)
+        {
+            builder.Append("Paged");
+        }
 
         // Parameters definitions
         builder.Append("(");
@@ -406,14 +453,23 @@ public class ControllerGenerator : ISourceGenerator
             builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
                 .Append("int pageIndex, int pageSize,");
         }
+
         var lastQueryArg = queryArgs.Last();
         foreach (var (property, name, _, @default, ignoreWhenNull, _) in queryArgs)
         {
             builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
                 .AppendFormat("{0}{1} {2}", property.Type, ignoreWhenNull ? "?" : string.Empty, name);
-            if (ignoreWhenNull || @default is not null) builder.AppendFormat(" = {0}", GetCodeDisplayValue(@default));
-            if (!ReferenceEquals(lastQueryArg.property, property)) builder.AppendLine(",");
+            if (ignoreWhenNull || @default is not null)
+            {
+                builder.AppendFormat(" = {0}", GetCodeDisplayValue(@default));
+            }
+
+            if (!ReferenceEquals(lastQueryArg.property, property))
+            {
+                builder.AppendLine(",");
+            }
         }
+
         builder.AppendLine(")");
 
         // Method body
@@ -457,8 +513,8 @@ public class ControllerGenerator : ISourceGenerator
     private static IEnumerable<AttributeData> GetQueryParameters(IPropertySymbol property)
     {
         return property.GetAttributes().Where(attribute =>
-                   attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.Project.Shared &&
-                   attribute.AttributeClass!.Name == nameof(Symbols.Types.Project.QueryParameterAttribute));
+            attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.Project.Shared &&
+            attribute.AttributeClass!.Name == nameof(Symbols.Types.Project.QueryParameterAttribute));
     }
 
     private static INamedTypeSymbol TrimNullable(INamedTypeSymbol type)
@@ -474,9 +530,11 @@ public class ControllerGenerator : ISourceGenerator
     private static void GenerateParameterDefinition(StringBuilder builder, IParameterSymbol parameter)
     {
         foreach (var attribute in parameter.GetAttributes())
+        {
             builder.Append(Symbols.Codes.Ident)
                 .Append(Symbols.Codes.Ident)
                 .AppendLine($"[{attribute}]");
+        }
 
         builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
         if (parameter.HasExplicitDefaultValue)
@@ -512,7 +570,10 @@ public class ControllerGenerator : ISourceGenerator
     private static void GenerateComments(StringBuilder builder, ISymbol symbol, int indentLevel)
     {
         var memberXml = symbol.GetDocumentationCommentXml();
-        if (string.IsNullOrEmpty(memberXml)) return;
+        if (string.IsNullOrEmpty(memberXml))
+        {
+            return;
+        }
 
         var xmlDoc = new XmlDocument();
         xmlDoc.LoadXml(memberXml);
@@ -568,7 +629,9 @@ public class ControllerGenerator : ISourceGenerator
                     !ignoredMethods.Contains(method) &&
                     HasHttpMethod(method) &&
                     regex.IsMatch(method.Name))
+                {
                     yield return method;
+                }
             }
 
             var baseType = @class.BaseType;

@@ -13,7 +13,10 @@ public class EncryptHelper
     public EncryptHelper(string? keyPath)
     {
         _keyPath = keyPath ?? throw new Exception("Missing key path");
-        if (!Directory.Exists(_keyPath)) Directory.CreateDirectory(_keyPath);
+        if (!Directory.Exists(_keyPath))
+        {
+            Directory.CreateDirectory(_keyPath);
+        }
     }
 
     public ConcurrentDictionary<string, ECDsaSecurityKey> PrivateKeys { get; } = new();
@@ -21,7 +24,10 @@ public class EncryptHelper
 
     public ECDsaSecurityKey GetPrivateKey(string name)
     {
-        if (PrivateKeys.TryGetValue(name, out var securityKey)) return securityKey;
+        if (PrivateKeys.TryGetValue(name, out var securityKey))
+        {
+            return securityKey;
+        }
 
         if (!UpdateKey(name, true))
         {
@@ -36,7 +42,10 @@ public class EncryptHelper
 
     public ECDsaSecurityKey GetPublicKey(string name)
     {
-        if (PublicKeys.TryGetValue(name, out var securityKey)) return securityKey;
+        if (PublicKeys.TryGetValue(name, out var securityKey))
+        {
+            return securityKey;
+        }
 
         if (!UpdateKey(name, false))
         {
@@ -72,7 +81,10 @@ public class EncryptHelper
     private bool UpdateKey(string name, bool isPrivate)
     {
         var file = Path.Combine(_keyPath, $"{name}{(isPrivate ? "_private" : "_public")}.pem");
-        if (!File.Exists(file)) return false;
+        if (!File.Exists(file))
+        {
+            return false;
+        }
 
         var content = File.ReadAllText(file);
         var key = ECDsa.Create();

@@ -1,4 +1,3 @@
-using DoliteTemplate.Domain.Entities;
 using DoliteTemplate.Domain.Entities.Base;
 using DoliteTemplate.Domain.Services.Base;
 using Microsoft.AspNetCore.Mvc;
@@ -23,13 +22,14 @@ public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateD
     [Route("{id:guid}")]
     public override async Task<int> Update(Guid id, [FromBody] TUpdateDto dto)
     {
-        IQueryable<TEntity> query = DbContext.Set<TEntity>().AsTracking();
+        var query = DbContext.Set<TEntity>().AsTracking();
         query = AfterQuery(query);
         var entity = await query.SingleOrDefaultAsync(entity => entity.Id == id);
         if (entity is null)
         {
             return 0;
         }
+
         Mapper.Map(dto, entity);
         return await DbContext.SaveChangesAsync();
     }
