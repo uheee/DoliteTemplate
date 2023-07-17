@@ -386,6 +386,11 @@ public class ControllerGenerator : ISourceGenerator
 
         // Parameters definitions
         builder.Append("(");
+        if (paginated)
+        {
+            builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
+                .AppendLine("int pageIndex, int pageSize,");
+        }
         var lastQueryArg = queryArgs.Last();
         foreach (var (property, name, _, @default, ignoreWhenNull, _) in queryArgs)
         {
@@ -413,7 +418,8 @@ public class ControllerGenerator : ISourceGenerator
         builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
             .AppendFormat("query = {0}.AfterQuery(query);", serviceMemberName).AppendLine();
         builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
-            .AppendFormat("var result = await query.{0}();", paginated ? "ToPagedListAsync" : "ToArrayAsync")
+            .AppendFormat("var result = await query.{0};",
+                paginated ? "ToPagedListAsync(pageIndex, pageSize)" : "ToArrayAsync()")
             .AppendLine();
         builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
             .AppendFormat("return Ok({0}.Mapper.Map<{1}<{2}>>(result));", serviceMemberName,
