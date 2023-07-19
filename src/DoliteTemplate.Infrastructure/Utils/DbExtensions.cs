@@ -1,3 +1,4 @@
+using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -181,5 +182,13 @@ public static class DbExtensions
             { Mode: DbFilterMode.Empty } => dbContext.HasData(clrType),
             _ => true
         };
+    }
+
+    public static IEnumerable<IDataRecord> ReadAll(this IDataReader dataReader)
+    {
+        while (dataReader.Read())
+        {
+            yield return dataReader;
+        }
     }
 }

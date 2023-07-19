@@ -1,3 +1,4 @@
+using System.Data;
 using AutoMapper;
 using DoliteTemplate.Api.Utils;
 using DoliteTemplate.Api.Utils.Error;
@@ -105,6 +106,26 @@ public class BaseService<TService, TDbContext> : BaseService<TService>
 
             throw;
         }
+    }
+
+    #endregion
+
+    #region Raw SQL execution
+
+    public async Task<IDataReader> RawSqlQuery(string statement, params object[] parameters)
+    {
+        await using var command = DbConnection.CreateCommand();
+        command.CommandText = statement;
+        command.Parameters.AddRange(parameters);
+        return await command.ExecuteReaderAsync();
+    }
+
+    public async Task<int> RawSqlNonQuery(string statement, params object[] parameters)
+    {
+        await using var command = DbConnection.CreateCommand();
+        command.CommandText = statement;
+        command.Parameters.AddRange(parameters);
+        return await command.ExecuteNonQueryAsync();
     }
 
     #endregion
