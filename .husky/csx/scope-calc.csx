@@ -2,6 +2,7 @@
 
 using System.IO;
 
+const string scopePrefix = "DoliteTemplate.";
 const string srcRoot = "src";
 var srcPath = srcRoot.Split('/');
 
@@ -31,13 +32,11 @@ bool GetScope(IEnumerable<string> files, out string? scope)
         if (parentDir.Any())
         {
             var projectName = parentDir.First();
-            var projectNameSlices = projectName.Split('.', 2);
-            if (projectNameSlices.Length < 2)
+            if (projectName.StartsWith(scopePrefix))
             {
-                Console.WriteLine($"The project name {projectName} is invalid, it should be a format like AAA.BB");
-                return false;
+                projectName = projectName.Substring(scopePrefix.Length);
             }
-            parentDir = new[] {projectNameSlices.Last()}.Concat(parentDir.Skip(1)).ToArray();
+            parentDir = new[] {projectName}.Concat(parentDir.Skip(1)).ToArray();
         }
 
         scope = $"${string.Join('.', parentDir)}".ToLower();
