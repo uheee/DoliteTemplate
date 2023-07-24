@@ -1,6 +1,6 @@
 namespace DoliteTemplate.Shared;
 
-[AttributeUsage(AttributeTargets.Property)]
+[AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
 public class QueryParameterAttribute : Attribute
 {
     public string? Name { get; set; }
@@ -8,12 +8,4 @@ public class QueryParameterAttribute : Attribute
     public object? Default { get; set; }
     public bool IgnoreWhenNull { get; set; }
     public string? Description { get; set; }
-}
-
-public enum QueryParameterComparor
-{
-    Eq,
-    LtE,
-    GtE,
-    Contains
 }
