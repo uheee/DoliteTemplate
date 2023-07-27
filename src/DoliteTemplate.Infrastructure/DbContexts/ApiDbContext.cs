@@ -90,21 +90,18 @@ public class ApiDbContext : DbContext
                 Expression.Constant(false));
             builder.HasQueryFilter(Expression.Lambda(body, param));
 
-            var indexAttribute = entityType.GetCustomAttribute<IndexAttribute>();
-            if (indexAttribute is null)
+            foreach (var indexAttribute in entityType.GetCustomAttributes<IndexAttribute>())
             {
-                return;
-            }
-
-            var indexNames = indexAttribute.PropertyNames.ToArray();
-            var indexBuilder = builder.HasIndex(indexNames)
-                .HasFilter($@"""{nameof(ISoftDeletable.IsDeleted)}"" is not true");
-            var indexIsUnique = indexAttribute.IsUnique;
-            indexBuilder.IsUnique(indexIsUnique);
-            var indexIsDescending = indexAttribute.IsDescending;
-            if (indexIsDescending is not null)
-            {
-                indexBuilder.IsDescending(indexIsDescending);
+                var indexNames = indexAttribute.PropertyNames.ToArray();
+                var indexBuilder = builder.HasIndex(indexNames)
+                    .HasFilter($@"""{nameof(ISoftDeletable.IsDeleted)}"" is not true");
+                var indexIsUnique = indexAttribute.IsUnique;
+                indexBuilder.IsUnique(indexIsUnique);
+                var indexIsDescending = indexAttribute.IsDescending;
+                if (indexIsDescending is not null)
+                {
+                    indexBuilder.IsDescending(indexIsDescending);
+                }
             }
         });
 
