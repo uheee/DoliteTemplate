@@ -150,25 +150,11 @@ public class ApiDbContext : DbContext
 
     #region Saving changes actions
 
-    public override int SaveChanges()
-    {
-        HandleUniqueIndices();
-        HandleAuditedOrSoftDeletable();
-        return base.SaveChanges();
-    }
-
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         HandleUniqueIndices();
         HandleAuditedOrSoftDeletable();
         return base.SaveChanges(acceptAllChangesOnSuccess);
-    }
-
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
-    {
-        HandleUniqueIndices();
-        HandleAuditedOrSoftDeletable();
-        return base.SaveChangesAsync(cancellationToken);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
