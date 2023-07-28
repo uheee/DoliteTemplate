@@ -190,6 +190,11 @@ public class ApiDbContext : DbContext
             BindingFlags.Public | BindingFlags.Static)!;
         foreach (var entry in entries)
         {
+            if (entry.Metadata.IsOwned())
+            {
+                continue;
+            }
+
             var entity = entry.Entity;
             var clrType = entity.GetType();
             var indices = clrType.GetCustomAttributes<IndexAttribute>(true);
