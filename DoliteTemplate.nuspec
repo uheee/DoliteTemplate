@@ -6,7 +6,7 @@
     <version>${RELEASE_VERSION}</version>
     <title>Dolite Web API Solution Template</title>
     <authors>Snowind</authors>
-    <description>An out-of-box Web API solution template for .NET 7</description>
+    <description>An out-of-box Web API solution template for .NET 8</description>
     <releaseNotes>
       Initial released.
     </releaseNotes>
