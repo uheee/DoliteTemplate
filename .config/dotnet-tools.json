@@ -3,27 +3,21 @@
   "isRoot": true,
   "tools": {
     "husky": {
-      "version": "0.5.4",
+      "version": "0.6.4",
       "commands": [
         "husky"
       ]
     },
     "dotnet-ef": {
-      "version": "7.0.7",
+      "version": "8.0.1",
       "commands": [
         "dotnet-ef"
       ]
     },
     "dotnet-script": {
-      "version": "1.4.0",
+      "version": "1.5.0",
       "commands": [
         "dotnet-script"
-      ]
-    },
-    "dotnet-format": {
-      "version": "5.1.225507",
-      "commands": [
-        "dotnet-format"
       ]
     }
   }
