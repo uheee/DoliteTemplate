@@ -18,9 +18,6 @@ public class DbModule : Module
                     .Create(context.Resolve<IConfiguration>().GetConnectionString(ConnectionStrings.Database)!)
                     .OpenConnection())
             .AsSelf().As<DbConnection>().InstancePerLifetimeScope();
-        builder.Register(context =>
-                new NpgsqlLargeObjectManager(context.Resolve<NpgsqlConnection>()))
-            .AsSelf();
         builder.Register(context => context.Resolve<DbConnection>().BeginTransaction()).As<DbTransaction>();
         builder.RegisterGeneric(typeof(DbContextProvider<>)).AsSelf().PropertiesAutowired();
     }

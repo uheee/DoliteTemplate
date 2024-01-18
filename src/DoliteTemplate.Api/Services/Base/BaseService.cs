@@ -45,7 +45,6 @@ public class BaseService<TService, TDbContext> : BaseService<TService>
     public TDbContext DbContext => DbContextLazier.Value;
     public Lazy<DbContextProvider<TDbContext>> DbContextProviderLazier { get; init; } = null!;
     public DbContextProvider<TDbContext> DbContextProvider => DbContextProviderLazier.Value;
-    public NpgsqlLargeObjectManager ObjectManager { get; init; } = null!;
 
     #region Transaction
 
