@@ -10,22 +10,22 @@ using StackExchange.Redis;
 
 namespace DoliteTemplate.Api.Services.Base;
 
-public abstract class BaseService
+public abstract class BaseService(IMapper mapper)
 {
-    public IMapper Mapper { get; init; } = null!;
+    public IMapper Mapper => mapper;
 }
 
-public class BaseService<TService> : BaseService, ICulturalResource<TService>
+public class BaseService<TService>(
+    IMapper mapper,
+    IConnectionMultiplexer redis,
+    IHttpContextAccessor httpContextAccessor,
+    EncryptHelper encryptHelper,
+    IStringLocalizer<TService> localizer) : BaseService(mapper), ICulturalResource
     where TService : BaseService<TService>
 {
-    public IConnectionMultiplexer Redis { get; init; } = null!;
-    public IHttpContextAccessor HttpContextAccessor { get; init; } = null!;
-    public EncryptHelper EncryptHelper { get; init; } = null!;
-    public IStringLocalizer<TService> Localizer { get; init; } = null!;
-
     public BusinessException Error(string errCode, params object[] args)
     {
-        var errTemplate = Localizer[errCode];
+        var errTemplate = localizer[errCode];
         var errMsg = string.Format(errTemplate, args);
         if (string.IsNullOrEmpty(errMsg))
         {
@@ -36,96 +36,102 @@ public class BaseService<TService> : BaseService, ICulturalResource<TService>
     }
 }
 
-public class BaseService<TService, TDbContext> : BaseService<TService>
+public class BaseService<TService, TDbContext>(
+    IMapper mapper,
+    IConnectionMultiplexer redis,
+    IHttpContextAccessor httpContextAccessor,
+    EncryptHelper encryptHelper,
+    IStringLocalizer<TService> localizer,
+    NpgsqlConnection dbConnection,
+    Lazy<TDbContext> dbContextLazier,
+    Lazy<DbContextProvider<TDbContext>> dbContextProviderLazier)
+    : BaseService<TService>(mapper, redis, httpContextAccessor, encryptHelper, localizer)
     where TService : BaseService<TService, TDbContext>
     where TDbContext : DbContext
 {
-    public NpgsqlConnection DbConnection { get; init; } = null!;
-    public Lazy<TDbContext> DbContextLazier { get; init; } = null!;
-    public TDbContext DbContext => DbContextLazier.Value;
-    public Lazy<DbContextProvider<TDbContext>> DbContextProviderLazier { get; init; } = null!;
-    public DbContextProvider<TDbContext> DbContextProvider => DbContextProviderLazier.Value;
+    public TDbContext DbContext => dbContextLazier.Value;
+public DbContextProvider<TDbContext> DbContextProvider => dbContextProviderLazier.Value;
 
-    #region Transaction
+#region Transaction
 
-    protected Task UseTransaction(Func<TDbContext, Task> action)
+protected Task UseTransaction(Func<TDbContext, Task> action)
+{
+    return UseTransaction(async provider => await action(await provider.GetDbContext()));
+}
+
+protected Task<TResult> UseTransaction<TResult>(Func<TDbContext, Task<TResult>> action)
+{
+    return UseTransaction(async provider => await action(await provider.GetDbContext()));
+}
+
+protected async Task UseTransaction(Func<DbContextProvider<TDbContext>, Task> action)
+{
+    try
     {
-        return UseTransaction(async provider => await action(await provider.GetDbContext()));
-    }
-
-    protected Task<TResult> UseTransaction<TResult>(Func<TDbContext, Task<TResult>> action)
-    {
-        return UseTransaction(async provider => await action(await provider.GetDbContext()));
-    }
-
-    protected async Task UseTransaction(Func<DbContextProvider<TDbContext>, Task> action)
-    {
-        try
+        await action(DbContextProvider);
+        if (DbContextProvider.Transaction is null)
         {
-            await action(DbContextProvider);
-            if (DbContextProvider.Transaction is null)
-            {
-                throw new Exception("DbContext count is less than 1");
-            }
-
-            await DbContextProvider.Transaction.CommitAsync();
+            throw new Exception("DbContext count is less than 1");
         }
-        catch (Exception e)
-        {
-            Log.Error(e, "Failed to execute transaction");
-            if (DbContextProvider.Transaction is not null)
-            {
-                await DbContextProvider.Transaction.RollbackAsync();
-            }
 
-            throw;
-        }
+        await DbContextProvider.Transaction.CommitAsync();
     }
-
-    protected async Task<TResult> UseTransaction<TResult>(Func<DbContextProvider<TDbContext>, Task<TResult>> action)
+    catch (Exception e)
     {
-        try
+        Log.Error(e, "Failed to execute transaction");
+        if (DbContextProvider.Transaction is not null)
         {
-            var result = await action(DbContextProvider);
-            if (DbContextProvider.Transaction is null)
-            {
-                throw new Exception("DbContext count is less than 1");
-            }
-
-            await DbContextProvider.Transaction.CommitAsync();
-            return result;
+            await DbContextProvider.Transaction.RollbackAsync();
         }
-        catch (Exception e)
+
+        throw;
+    }
+}
+
+protected async Task<TResult> UseTransaction<TResult>(Func<DbContextProvider<TDbContext>, Task<TResult>> action)
+{
+    try
+    {
+        var result = await action(DbContextProvider);
+        if (DbContextProvider.Transaction is null)
         {
-            Log.Error(e, "Failed to execute transaction");
-            if (DbContextProvider.Transaction is not null)
-            {
-                await DbContextProvider.Transaction.RollbackAsync();
-            }
-
-            throw;
+            throw new Exception("DbContext count is less than 1");
         }
+
+        await DbContextProvider.Transaction.CommitAsync();
+        return result;
     }
-
-    #endregion
-
-    #region Raw SQL execution
-
-    public async Task<IDataReader> RawSqlQuery(string statement, params object[] parameters)
+    catch (Exception e)
     {
-        await using var command = DbConnection.CreateCommand();
-        command.CommandText = statement;
-        command.Parameters.AddRange(parameters);
-        return await command.ExecuteReaderAsync();
-    }
+        Log.Error(e, "Failed to execute transaction");
+        if (DbContextProvider.Transaction is not null)
+        {
+            await DbContextProvider.Transaction.RollbackAsync();
+        }
 
-    public async Task<int> RawSqlNonQuery(string statement, params object[] parameters)
-    {
-        await using var command = DbConnection.CreateCommand();
-        command.CommandText = statement;
-        command.Parameters.AddRange(parameters);
-        return await command.ExecuteNonQueryAsync();
+        throw;
     }
+}
+
+#endregion
+
+#region Raw SQL execution
+
+public async Task<IDataReader> RawSqlQuery(string statement, params object[] parameters)
+{
+    await using var command = dbConnection.CreateCommand();
+    command.CommandText = statement;
+    command.Parameters.AddRange(parameters);
+    return await command.ExecuteReaderAsync();
+}
+
+public async Task<int> RawSqlNonQuery(string statement, params object[] parameters)
+{
+    await using var command = dbConnection.CreateCommand();
+    command.CommandText = statement;
+    command.Parameters.AddRange(parameters);
+    return await command.ExecuteNonQueryAsync();
+}
 
     #endregion
 }

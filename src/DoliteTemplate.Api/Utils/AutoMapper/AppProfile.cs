@@ -8,7 +8,6 @@ public class AppProfile : Profile
     public AppProfile()
     {
         CreateMap(typeof(PaginatedList<>), typeof(PaginatedList<>)).ConvertUsing(typeof(PageConverter<,>));
-        // Set custom mappers
     }
 
     private class

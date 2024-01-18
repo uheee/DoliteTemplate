@@ -12,6 +12,7 @@ namespace DoliteTemplate.Api.Utils;
 public static partial class AuthorizationExtensions
 {
     private static readonly Regex RoleRegex = GenerateRoleRegex();
+    private static readonly char[] Separator = [' ', ',', '|'];
 
     public static void AutoSetPolicies(this AuthorizationOptions options)
     {
@@ -44,7 +45,7 @@ public static partial class AuthorizationExtensions
                 continue;
             }
 
-            var requiredRoles = match.Groups[1].Value.Split(new[] { ' ', ',', '|' },
+            var requiredRoles = match.Groups[1].Value.Split(Separator,
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             var allowedRoles = requiredRoles.SelectMany(GetRoleParts).Distinct();
             options.AddPolicy(policy, config => config.AddRequirements(

@@ -1,13 +1,7 @@
 namespace DoliteTemplate.Api.Utils.Error;
 
-public class BusinessException : Exception
+public class BusinessException(string errCode, string errMsg) : Exception($"{errCode}: {errMsg}")
 {
-    public BusinessException(string errCode, string errMsg) : base($"{errCode}: {errMsg}")
-    {
-        ErrCode = errCode;
-        ErrMsg = errMsg;
-    }
-
-    public string ErrCode { get; }
-    public string ErrMsg { get; }
+    public string ErrCode { get; } = errCode;
+public string ErrMsg { get; } = errMsg;
 }

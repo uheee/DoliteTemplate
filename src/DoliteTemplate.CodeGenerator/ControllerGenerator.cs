@@ -11,10 +11,10 @@ namespace DoliteTemplate.CodeGenerator;
 [Generator]
 public class ControllerGenerator : ISourceGenerator
 {
-    private static readonly IEnumerable<string> ControllerIgnoreAttributes = new[]
-    {
+    private static readonly string[] ControllerIgnoreAttributes =
+    [
         Symbols.Types.Project.ApiServiceAttribute
-    };
+    ];
 
     private static readonly Dictionary<string, string> ControllerDefaultAttributes = new()
     {
@@ -28,10 +28,10 @@ public class ControllerGenerator : ISourceGenerator
         }
     };
 
-    private static readonly IEnumerable<string> MethodIgnoreAttributes = new[]
-    {
+    private static readonly string[] MethodIgnoreAttributes =
+    [
         Symbols.Types.Project.TransactionAttribute
-    };
+    ];
 
     public void Initialize(GeneratorInitializationContext context)
     {
@@ -206,7 +206,8 @@ public class ControllerGenerator : ISourceGenerator
             Symbols.Types.System.ProducesResponseTypeAttribute,
             Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
             $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
-        foreach (var attribute in new[] { okResponseAttribute, badRequestResponseAttribute })
+        string?[] responseAttributes = [okResponseAttribute, badRequestResponseAttribute];
+        foreach (var attribute in responseAttributes)
         {
             builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
         }
@@ -326,13 +327,13 @@ public class ControllerGenerator : ISourceGenerator
         var entity = baseType!.TypeArguments[2];
         var dto = baseType!.TypeArguments[3];
         var properties = entity.GetMembers().OfType<IPropertySymbol>();
-        var queryArgs = new List<(
+        List<(
             IPropertySymbol property,
             string name,
             string comparor,
             object? @default,
             bool ignoreWhenNull,
-            string? description)>();
+            string? description)> queryArgs = [];
         foreach (var property in properties)
         {
             var queryParameters = GetQueryParameters(property).ToArray();
@@ -401,15 +402,15 @@ public class ControllerGenerator : ISourceGenerator
         if (paginated)
         {
             builder.Append(Symbols.Codes.Ident)
-                .AppendLine(@"/// <param name=""pageIndex"">Page index (start from 1)</param>");
+                .AppendLine("""/// <param name="pageIndex">Page index (start from 1)</param>""");
             builder.Append(Symbols.Codes.Ident)
-                .AppendLine(@"/// <param name=""pageSize"">Page size</param>");
+                .AppendLine("""/// <param name="pageSize">Page size</param>""");
         }
 
         foreach (var (_, name, _, _, _, description) in queryArgs)
         {
             builder.Append(Symbols.Codes.Ident)
-                .AppendFormat(@"/// <param name=""{0}"">{1}</param>", name, description)
+                .AppendFormat("""/// <param name="{0}">{1}</param>""", name, description)
                 .AppendLine();
         }
 
@@ -429,10 +430,9 @@ public class ControllerGenerator : ISourceGenerator
             Symbols.Types.System.ProducesResponseTypeAttribute,
             Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
             $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
-        foreach (var attribute in new[]
-                 {
-                     httpGetAttribute, routeAttribute, okResponseAttribute, badRequestResponseAttribute
-                 })
+        string?[] methodAttributes =
+            [httpGetAttribute, routeAttribute, okResponseAttribute, badRequestResponseAttribute];
+        foreach (var attribute in methodAttributes)
         {
             builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
         }
@@ -580,7 +580,7 @@ public class ControllerGenerator : ISourceGenerator
         var nodes = xmlDoc.FirstChild.ChildNodes;
         foreach (XmlNode node in nodes)
         {
-            var nodeLines = node.OuterXml.Split(new[] { Symbols.Codes.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var nodeLines = node.OuterXml.Split([Symbols.Codes.NewLine], StringSplitOptions.RemoveEmptyEntries);
             foreach (var nodeLine in nodeLines)
             {
                 foreach (var _ in Enumerable.Range(0, indentLevel))
@@ -603,8 +603,8 @@ public class ControllerGenerator : ISourceGenerator
     private static IEnumerable<IMethodSymbol> GetHttpMethods(ITypeSymbol @class, string rule)
     {
         var regex = new Regex(rule, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
-        var ignoredMethods = new List<IMethodSymbol>();
-        var hiddenMethodNames = new List<string>();
+        List<IMethodSymbol> ignoredMethods = [];
+        List<string> hiddenMethodNames = [];
         while (true)
         {
             foreach (var method in @class.GetMembers().OfType<IMethodSymbol>())

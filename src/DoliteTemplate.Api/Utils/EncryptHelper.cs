@@ -19,8 +19,8 @@ public class EncryptHelper
         }
     }
 
-    public ConcurrentDictionary<string, ECDsaSecurityKey> PrivateKeys { get; } = new();
-    public ConcurrentDictionary<string, ECDsaSecurityKey> PublicKeys { get; } = new();
+    public ConcurrentDictionary<string, ECDsaSecurityKey> PrivateKeys { get; } = [];
+    public ConcurrentDictionary<string, ECDsaSecurityKey> PublicKeys { get; } = [];
 
     public ECDsaSecurityKey GetPrivateKey(string name)
     {

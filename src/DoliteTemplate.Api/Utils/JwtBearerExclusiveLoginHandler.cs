@@ -8,52 +8,44 @@ using StackExchange.Redis;
 
 namespace DoliteTemplate.Api.Utils;
 
-public class JwtBearerExclusiveLoginHandler : JwtBearerHandler
+public class JwtBearerExclusiveLoginHandler(
+    IConnectionMultiplexer redis,
+    IWebHostEnvironment environment,
+    IOptionsMonitor<JwtBearerOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder)
+    : JwtBearerHandler(options, logger, encoder)
 {
-    private readonly IWebHostEnvironment _environment;
-    private readonly IConnectionMultiplexer _redis;
     private bool _expiredFlag;
 
-    public JwtBearerExclusiveLoginHandler(
-        IConnectionMultiplexer redis,
-        IWebHostEnvironment environment,
-        IOptionsMonitor<JwtBearerOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder) :
-        base(options, logger, encoder)
+protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+{
+    var result = await base.HandleAuthenticateAsync();
+    if (environment.IsDevelopment() || !result.Succeeded)
     {
-        _redis = redis;
-        _environment = environment;
+        return result;
     }
 
-    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+    var currentToken = Request.Headers.Authorization.ToString()[("Bearer".Length + 1)..];
+    var userId = result.Ticket.Principal.FindFirstValue(ClaimKeys.UserId);
+    var key = $"user:token:{userId}";
+    string? cachedToken = await redis.GetDatabase().StringGetAsync(key);
+    if (cachedToken is null || string.Equals(currentToken, cachedToken))
     {
-        var result = await base.HandleAuthenticateAsync();
-        if (_environment.IsDevelopment() || !result.Succeeded)
-        {
-            return result;
-        }
-
-        var currentToken = Request.Headers.Authorization.ToString()[("Bearer".Length + 1)..];
-        var userId = result.Ticket.Principal.FindFirstValue(ClaimKeys.UserId);
-        var key = $"user:token:{userId}";
-        string? cachedToken = await _redis.GetDatabase().StringGetAsync(key);
-        if (cachedToken is null || string.Equals(currentToken, cachedToken))
-        {
-            return AuthenticateResult.Success(result.Ticket);
-        }
-
-        _expiredFlag = true;
-        return AuthenticateResult.Fail("expired_token");
+        return AuthenticateResult.Success(result.Ticket);
     }
 
-    protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+    _expiredFlag = true;
+    return AuthenticateResult.Fail("expired_token");
+}
+
+protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+{
+    await base.HandleChallengeAsync(properties);
+    if (_expiredFlag)
     {
-        await base.HandleChallengeAsync(properties);
-        if (_expiredFlag)
-        {
-            Response.Headers.WWWAuthenticate =
-                Response.Headers.WWWAuthenticate.ToString().Replace("invalid_token", "expired_token");
-        }
+        Response.Headers.WWWAuthenticate =
+            Response.Headers.WWWAuthenticate.ToString().Replace("invalid_token", "expired_token");
     }
+}
 }
