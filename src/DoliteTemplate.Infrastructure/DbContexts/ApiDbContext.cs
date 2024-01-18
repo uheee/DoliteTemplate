@@ -190,8 +190,8 @@ public class ApiDbContext : DbContext
             var typedValidationMethod = validationMethod.MakeGenericMethod(clrType);
             var duplicatePropertyName = uniquePropertyNameGroups.FirstOrDefault(propertyNames =>
             {
-                var dict = typedSpecifyMethod.Invoke(null, new object[] { entry, propertyNames.ToArray() })!;
-                return (bool)typedValidationMethod.Invoke(null, new[] { this, dict, entity })!;
+                var dict = typedSpecifyMethod.Invoke(null, [entry, propertyNames.ToArray()])!;
+                return (bool)typedValidationMethod.Invoke(null, [this, dict, entity])!;
             });
             if (duplicatePropertyName is not null)
             {

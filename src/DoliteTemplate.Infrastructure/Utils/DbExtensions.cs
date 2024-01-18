@@ -48,7 +48,7 @@ public static class DbExtensions
     {
         var setMethod = typeof(DbContext).GetMethods()
             .Where(method => method.Name == nameof(DbContext.Set))
-            .Single(method => !method.GetParameters().Any());
+            .Single(method => method.GetParameters().Length == 0);
         setMethod = setMethod.MakeGenericMethod(type);
         return setMethod.Invoke(dbContext, null)!;
     }
@@ -57,14 +57,14 @@ public static class DbExtensions
     {
         var setMethod = typeof(DbContext).GetMethods()
             .Where(method => method.Name == nameof(DbContext.Set))
-            .Single(method => !method.GetParameters().Any());
+            .Single(method => method.GetParameters().Length == 0);
         setMethod = setMethod.MakeGenericMethod(type);
         var queryable = setMethod.Invoke(context, null);
         var anyMethod = typeof(Queryable).GetMethods()
             .Where(method => method.Name == nameof(Queryable.Any))
             .Single(method => method.GetParameters().Length == 1);
         anyMethod = anyMethod!.MakeGenericMethod(type);
-        return (bool)anyMethod.Invoke(null, new[] { queryable })!;
+        return (bool)anyMethod.Invoke(null, [queryable])!;
     }
 
     public static bool HasDataWithPrimaryKeys<TEntity>(this DbContext dbContext, params object[] keyValues)
@@ -164,21 +164,19 @@ public static class DbExtensions
             { Mode: DbFilterMode.Key, Args: null or { Length: 0 } } when primaryKey is not null =>
                 (bool)typeof(DbExtensions).GetMethod(nameof(HasDataWithPrimaryKeys),
                     BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(clrType).Invoke(null,
-                    new object[] { dbContext, GetPrimaryKeyValue(entity, clrType, primaryKey) })!,
-            { Mode: DbFilterMode.Key, Args: { Length: > 0 } key } =>
+                    [dbContext, GetPrimaryKeyValue(entity, clrType, primaryKey)])!,
+            { Mode: DbFilterMode.Key, Args: { } key } =>
                 (bool)typeof(DbExtensions).GetMethod(nameof(HasDataWithSpecifiedKeys),
                     BindingFlags.Public | BindingFlags.Static)!.MakeGenericMethod(clrType).Invoke(null,
-                    new[]
-                    {
-                        dbContext, specifiedKeyValueGetterMethod.Invoke(null,
-                            new[]
-                            {
-                                entity, key.Split(Strings.Separator,
-                                    StringSplitOptions.TrimEntries |
-                                    StringSplitOptions.RemoveEmptyEntries).ToArray()
-                            })!,
-                        null
-                    })!,
+                [
+                    dbContext, specifiedKeyValueGetterMethod.Invoke(null,
+                    [
+                        entity, key.Split(Strings.Separator,
+                            StringSplitOptions.TrimEntries |
+                            StringSplitOptions.RemoveEmptyEntries).ToArray()
+                    ])!,
+                    null
+                ])!,
             { Mode: DbFilterMode.Empty } => dbContext.HasData(clrType),
             _ => true
         };

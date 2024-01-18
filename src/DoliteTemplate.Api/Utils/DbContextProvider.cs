@@ -6,7 +6,7 @@ namespace DoliteTemplate.Api.Utils;
 
 public class DbContextProvider<TDbContext> : IDisposable where TDbContext : DbContext
 {
-    private readonly List<TDbContext> _dbContexts = new();
+    private readonly List<TDbContext> _dbContexts = [];
     public DbConnection DbConnection { get; init; } = null!;
     public DbTransaction Transaction { get; init; } = null!;
 
