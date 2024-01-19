@@ -18,12 +18,8 @@ public static class Symbols
 
         public static class Project
         {
-            public const string Api = "DoliteTemplate.Api";
-            public const string Controllers = $"{Api}.Controllers";
-            public const string Domain = "DoliteTemplate.Domain";
-            public const string EntityBase = $"{Domain}.Entity.Base";
-            public const string Shared = "DoliteTemplate.Shared";
-            public const string InfraUtils = "DoliteTemplate.Infrastructure.Utils";
+            public const string ApiShared = "DoliteTemplate.Api.Shared";
+            public const string DomainShared = "DoliteTemplate.Domain.Shared";
         }
     }
 
@@ -62,18 +58,26 @@ public static class Symbols
             public const string ProducesResponseTypeAttribute =
                 $"{Namespaces.System.Mvc}.ProducesResponseTypeAttribute";
 
-            public const string EfCoreExt = $"{Namespaces.System.EfCore}.EntityFrameworkQueryableExtensions";
+            public const string AsyncStateMachineAttribute =
+                "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
+
+            public const string DebuggerStepThroughAttribute = "System.Diagnostics.DebuggerStepThroughAttribute";
+            public const string NullableAttribute = "System.Runtime.CompilerServices.NullableAttribute";
         }
 
         public static class Project
         {
-            public const string BaseService = $"{Namespaces.Project.Api}.Services.Base.BaseService";
-            public const string EntityCrudService = $"{Namespaces.Project.Api}.Services.Base.EntityCrudService";
-            public const string ErrorInfo = $"{Namespaces.Project.Api}.Utils.Error.ErrorInfo";
-            public const string ApiServiceAttribute = $"{Namespaces.Project.Api}.Utils.ApiServiceAttribute";
-            public const string TransactionAttribute = $"{Namespaces.Project.Api}.Utils.TransactionAttribute";
-            public const string QueryParameterAttribute = $"{Namespaces.Project.Shared}.QueryParameterAttribute";
-            public const string PaginatedList = $"{Namespaces.Project.Shared}.Utils.PaginatedList";
+            public const string ApiServiceAttribute = $"{Namespaces.Project.ApiShared}.Utils.ApiServiceAttribute";
+            public const string ApiCommentAttribute = $"{Namespaces.Project.ApiShared}.Utils.ApiCommentAttribute";
+            public const string BaseService = $"{Namespaces.Project.ApiShared}.Services.BaseService";
+            public const string EntityCrudService = $"{Namespaces.Project.ApiShared}.Services.EntityCrudService";
+            public const string ErrorInfo = $"{Namespaces.Project.ApiShared}.Errors.ErrorInfo";
+            public const string TransactionAttribute = $"{Namespaces.Project.ApiShared}.Utils.TransactionAttribute";
+
+            public const string QueryParameterAttribute =
+                $"{Namespaces.Project.ApiShared}.Utils.QueryParameterAttribute";
+
+            public const string PaginatedList = $"{Namespaces.Project.DomainShared}.Utils.PaginatedList";
         }
     }
 
@@ -86,10 +90,6 @@ public static class Symbols
     public static class Codes
     {
         public const string Ident = "    ";
-#if _WINDOWS
-        public const string NewLine = "\r\n";
-#else
         public const string NewLine = "\n";
-#endif
     }
 }

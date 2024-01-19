@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" Version="8.0.3"/>
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.1"/>
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1"/>
@@ -18,7 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DoliteTemplate.Domain\DoliteTemplate.Domain.csproj"/>
-    <ProjectReference Include="..\DoliteTemplate.Shared\DoliteTemplate.Shared.csproj"/>
+    <ProjectReference Include="..\DoliteTemplate.Api.Shared\DoliteTemplate.Api.Shared.csproj"/>
   </ItemGroup>
 
 </Project>

@@ -11,10 +11,10 @@ namespace DoliteTemplate.CodeGenerator;
 [Generator]
 public class ControllerGenerator : ISourceGenerator
 {
-    private static readonly string[] ControllerIgnoreAttributes =
-    [
+    private static readonly IEnumerable<string> ControllerIgnoreAttributes = new[]
+    {
         Symbols.Types.Project.ApiServiceAttribute
-    ];
+    };
 
     private static readonly Dictionary<string, string> ControllerDefaultAttributes = new()
     {
@@ -28,10 +28,11 @@ public class ControllerGenerator : ISourceGenerator
         }
     };
 
-    private static readonly string[] MethodIgnoreAttributes =
-    [
-        Symbols.Types.Project.TransactionAttribute
-    ];
+    private static readonly IEnumerable<string> MethodIgnoreAttributes = new[]
+    {
+        Symbols.Types.System.AsyncStateMachineAttribute, Symbols.Types.System.DebuggerStepThroughAttribute,
+        Symbols.Types.System.NullableAttribute
+    };
 
     public void Initialize(GeneratorInitializationContext context)
     {
@@ -76,10 +77,11 @@ public class ControllerGenerator : ISourceGenerator
         }
     }
 
-    private static string GenerateController(StringBuilder builder, ITypeSymbol @class)
+    private static string GenerateController(StringBuilder builder, INamedTypeSymbol @class)
     {
         var serviceName = @class.Name;
         var serviceFullName = @class.ToDisplayString();
+        var serviceModuleNamespace = @class.ContainingNamespace.ContainingModule.ContainingSymbol.MetadataName;
         var apiServiceAttribute = @class.GetAttributes().Single(attribute =>
             attribute.AttributeClass!.ToDisplayString() == Symbols.Types.Project.ApiServiceAttribute);
         string? tag = null;
@@ -107,11 +109,10 @@ public class ControllerGenerator : ISourceGenerator
         builder.AppendLine();
 
         // Using namespaces
-        builder.AppendFormat("using {0};", Symbols.Namespaces.Project.InfraUtils).AppendLine();
         builder.AppendFormat("using {0};", Symbols.Namespaces.System.EfCore).AppendLine();
 
         // Self namespace
-        builder.AppendLine($"namespace {Symbols.Namespaces.Project.Controllers};");
+        builder.AppendLine($"namespace {serviceModuleNamespace}.Controllers;");
         builder.AppendLine();
 
         // Class comments
@@ -188,7 +189,8 @@ public class ControllerGenerator : ISourceGenerator
         GenerateComments(builder, method, 1);
 
         // Method attributes
-        var attributes = GetAttributesIncludeOverride(method);
+        var attributes = GetAttributesIncludeOverride(method)
+            .Where(attribute => !MethodIgnoreAttributes.Contains(attribute.AttributeClass!.ToDisplayString()));
         var isTransaction = IsTransaction(method);
         var attributeLines = attributes.Select(Symbols.Types.BuildAttribute);
         foreach (var attribute in attributeLines)
@@ -206,8 +208,7 @@ public class ControllerGenerator : ISourceGenerator
             Symbols.Types.System.ProducesResponseTypeAttribute,
             Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
             $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
-        string?[] responseAttributes = [okResponseAttribute, badRequestResponseAttribute];
-        foreach (var attribute in responseAttributes)
+        foreach (var attribute in new[] { okResponseAttribute, badRequestResponseAttribute })
         {
             builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
         }
@@ -316,10 +317,10 @@ public class ControllerGenerator : ISourceGenerator
         builder.Append(Symbols.Codes.Ident).AppendLine("}");
     }
 
-    private static void GenerateQueryMethods(StringBuilder builder, ITypeSymbol @class, string serviceMemberName)
+    private static void GenerateQueryMethods(StringBuilder builder, INamedTypeSymbol @class, string serviceMemberName)
     {
-        var baseType = @class.BaseType;
-        if ($"{baseType?.ContainingNamespace}.{baseType?.Name}" != Symbols.Types.Project.EntityCrudService)
+        var baseType = GetBaseClass(@class, Symbols.Types.Project.EntityCrudService);
+        if (baseType is null)
         {
             return;
         }
@@ -327,57 +328,12 @@ public class ControllerGenerator : ISourceGenerator
         var entity = baseType!.TypeArguments[2];
         var dto = baseType!.TypeArguments[3];
         var properties = entity.GetMembers().OfType<IPropertySymbol>();
-        List<(
-            IPropertySymbol property,
-            string name,
-            string comparor,
-            object? @default,
-            bool ignoreWhenNull,
-            string? description)> queryArgs = [];
+        var queryArgs = new List<QueryArgument>();
         foreach (var property in properties)
         {
             var queryParameters = GetQueryParameters(property).ToArray();
-            var queryParameterArgs = queryParameters.Select(attribute =>
-            {
-                var name = Extensions.ToCamelCase(property.Name);
-                var comparor = "{0} == {1}";
-                object? @default = null;
-                var ignoreWhenNull = true;
-                string? description = null;
-                foreach (var argPair in attribute.NamedArguments)
-                {
-                    switch (Extensions.ToCamelCase(argPair.Key))
-                    {
-                        case nameof(name):
-                            name = (string?)argPair.Value.Value;
-                            break;
-                        case nameof(comparor):
-                            comparor = ((string)argPair.Value.Value!).ToLower() switch
-                            {
-                                null => comparor,
-                                "eq" => "{0} == {1}",
-                                "lt" => "{0} < {1}",
-                                "gt" => "{0} > {1}",
-                                "lte" => "{0} <= {1}",
-                                "gte" => "{0} >= {1}",
-                                "contains" => "{0}.Contains({1})",
-                                var other => other
-                            };
-                            break;
-                        case nameof(@default):
-                            @default = argPair.Value.Value;
-                            break;
-                        case nameof(ignoreWhenNull):
-                            ignoreWhenNull = (bool)argPair.Value.Value!;
-                            break;
-                        case nameof(description):
-                            description = (string)argPair.Value.Value!;
-                            break;
-                    }
-                }
-
-                return (property, name!, comparor, @default, ignoreWhenNull, description);
-            });
+            var queryParameterArgs =
+                queryParameters.Select(attribute => new QueryArgument(property, attribute.NamedArguments));
             queryArgs.AddRange(queryParameterArgs);
         }
 
@@ -392,8 +348,7 @@ public class ControllerGenerator : ISourceGenerator
     }
 
     private static void WriteQueryMethod(StringBuilder builder, ITypeSymbol entity, ITypeSymbol dto,
-        List<(IPropertySymbol property, string name, string comparor, object? @default, bool ignoreWhenNull, string?
-            description)> queryArgs, string serviceMemberName, bool paginated)
+        List<QueryArgument> queryArguments, string serviceMemberName, bool paginated)
     {
         // Method comments
         builder.Append(Symbols.Codes.Ident).AppendLine("/// <summary>");
@@ -407,10 +362,10 @@ public class ControllerGenerator : ISourceGenerator
                 .AppendLine("""/// <param name="pageSize">Page size</param>""");
         }
 
-        foreach (var (_, name, _, _, _, description) in queryArgs)
+        foreach (var queryArgument in queryArguments)
         {
             builder.Append(Symbols.Codes.Ident)
-                .AppendFormat("""/// <param name="{0}">{1}</param>""", name, description)
+                .AppendFormat(@"/// <param name=""{0}"">{1}</param>", queryArgument.Name, queryArgument.Description)
                 .AppendLine();
         }
 
@@ -430,16 +385,18 @@ public class ControllerGenerator : ISourceGenerator
             Symbols.Types.System.ProducesResponseTypeAttribute,
             Symbols.Types.BuildTypeOf(Symbols.Types.Project.ErrorInfo),
             $"{Symbols.Types.System.StatusCodes}.Status400BadRequest");
-        string?[] methodAttributes =
-            [httpGetAttribute, routeAttribute, okResponseAttribute, badRequestResponseAttribute];
-        foreach (var attribute in methodAttributes)
+        foreach (var attribute in new[]
+                 {
+                     httpGetAttribute, routeAttribute, okResponseAttribute, badRequestResponseAttribute
+                 })
         {
             builder.Append(Symbols.Codes.Ident).AppendLine(attribute);
         }
 
         // Method name
         builder.Append(Symbols.Codes.Ident)
-            .AppendFormat("public async {0}<{1}> ", Symbols.Types.System.Task, Symbols.Types.System.ActionResult);
+            .AppendFormat("public virtual async {0}<{1}> ", Symbols.Types.System.Task,
+                Symbols.Types.System.ActionResult);
         builder.Append("GetWhere");
         if (paginated)
         {
@@ -454,17 +411,30 @@ public class ControllerGenerator : ISourceGenerator
                 .Append("int pageIndex, int pageSize,");
         }
 
-        var lastQueryArg = queryArgs.Last();
-        foreach (var (property, name, _, @default, ignoreWhenNull, _) in queryArgs)
+        var lastQueryArg = queryArguments.Last();
+        foreach (var queryArgument in queryArguments)
         {
-            builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
-                .AppendFormat("{0}{1} {2}", property.Type, ignoreWhenNull ? "?" : string.Empty, name);
-            if (ignoreWhenNull || @default is not null)
+            var parameterType = queryArgument.Property.Type;
+            if (queryArgument.Navigation is not null)
             {
-                builder.AppendFormat(" = {0}", GetCodeDisplayValue(@default));
+                var queue = new Queue<string>();
+                queryArgument.Navigation.Split('.').ToList().ForEach(slice => queue.Enqueue(slice));
+                parameterType = GetNavigationType(queryArgument.Property.Type, queue);
             }
 
-            if (!ReferenceEquals(lastQueryArg.property, property))
+            builder.AppendLine().Append(Symbols.Codes.Ident)
+                .Append(Symbols.Codes.Ident)
+                .AppendFormat("{0}{1} {2}", parameterType,
+                    queryArgument.IgnoreWhenNull && parameterType.NullableAnnotation != NullableAnnotation.Annotated
+                        ? "?"
+                        : string.Empty,
+                    queryArgument.Name);
+            if (queryArgument.IgnoreWhenNull || queryArgument.Default is not null)
+            {
+                builder.AppendFormat(" = {0}", GetCodeDisplayValue(queryArgument.Default));
+            }
+
+            if (!ReferenceEquals(lastQueryArg, queryArgument))
             {
                 builder.AppendLine(",");
             }
@@ -475,18 +445,22 @@ public class ControllerGenerator : ISourceGenerator
         // Method body
         builder.Append(Symbols.Codes.Ident).AppendLine("{");
         builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
-        builder.AppendFormat("var query = {0}.DbContext.Set<{1}>()", serviceMemberName, entity);
+        builder.AppendFormat("var query = {0}.DbContext.Set<{1}>().AsNoTracking()", serviceMemberName, entity);
 
-        foreach (var (property, name, comparor, _, ignoreWhenNull, _) in queryArgs)
+        foreach (var queryArgument in queryArguments)
         {
             builder.AppendLine().Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident);
             const string entitySymbol = "entity";
-            var queryCondition = string.Format(comparor, $"{entitySymbol}.{property.Name}", name);
-            if (ignoreWhenNull)
+            var propertyNavigation = queryArgument.Navigation is null
+                ? queryArgument.Property.Name
+                : $"{queryArgument.Property.Name}.{queryArgument.Navigation}";
+            var queryCondition = string.Format(queryArgument.Comparor,
+                $"{entitySymbol}.{propertyNavigation}", queryArgument.Name);
+            if (queryArgument.IgnoreWhenNull)
             {
-                var nullCheck = property.Type.ToDisplayString() == "string"
-                    ? $"!string.IsNullOrEmpty({name})"
-                    : $"{name} is not null";
+                var nullCheck = queryArgument.Property.Type.ToDisplayString() == "string"
+                    ? $"!string.IsNullOrEmpty({queryArgument.Name})"
+                    : $"{queryArgument.Name} is not null";
                 builder.AppendFormat(
                     ".WhereIf({2}, {0} => {1})", entitySymbol, queryCondition, nullCheck);
             }
@@ -498,7 +472,7 @@ public class ControllerGenerator : ISourceGenerator
 
         builder.AppendLine(";");
         builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
-            .AppendFormat("query = {0}.AfterQuery(query);", serviceMemberName).AppendLine();
+            .AppendFormat("query = {0}.QueryManyInclude(query);", serviceMemberName).AppendLine();
         builder.Append(Symbols.Codes.Ident).Append(Symbols.Codes.Ident)
             .AppendFormat("var result = await query.{0};",
                 paginated ? "ToPagedListAsync(pageIndex, pageSize)" : "ToArrayAsync()")
@@ -513,8 +487,21 @@ public class ControllerGenerator : ISourceGenerator
     private static IEnumerable<AttributeData> GetQueryParameters(IPropertySymbol property)
     {
         return property.GetAttributes().Where(attribute =>
-            attribute.AttributeClass!.ContainingNamespace.ToDisplayString() == Symbols.Namespaces.Project.Shared &&
+            attribute.AttributeClass!.ContainingNamespace.ToDisplayString() ==
+            $"{Symbols.Namespaces.Project.ApiShared}.Utils" &&
             attribute.AttributeClass!.Name == nameof(Symbols.Types.Project.QueryParameterAttribute));
+    }
+
+    private static ITypeSymbol GetNavigationType(ITypeSymbol type, Queue<string> navigationSlices)
+    {
+        if (!navigationSlices.Any())
+        {
+            return type;
+        }
+
+        var slice = navigationSlices.Dequeue();
+        var property = type.GetMembers(slice).OfType<IPropertySymbol>().Single();
+        return GetNavigationType(property.Type, navigationSlices);
     }
 
     private static INamedTypeSymbol TrimNullable(INamedTypeSymbol type)
@@ -570,25 +557,71 @@ public class ControllerGenerator : ISourceGenerator
     private static void GenerateComments(StringBuilder builder, ISymbol symbol, int indentLevel)
     {
         var memberXml = symbol.GetDocumentationCommentXml();
-        if (string.IsNullOrEmpty(memberXml))
+        if (!string.IsNullOrEmpty(memberXml))
         {
+            var xmlDoc = new XmlDocument();
+            xmlDoc.LoadXml(memberXml);
+            var nodes = xmlDoc.FirstChild.ChildNodes;
+            foreach (XmlNode node in nodes)
+            {
+                var nodeLines =
+                    node.OuterXml.Split(new[] { Symbols.Codes.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var nodeLine in nodeLines)
+                {
+                    AppendIndent();
+                    builder.AppendFormat("/// {0}", nodeLine.Trim()).AppendLine();
+                }
+            }
+
             return;
         }
 
-        var xmlDoc = new XmlDocument();
-        xmlDoc.LoadXml(memberXml);
-        var nodes = xmlDoc.FirstChild.ChildNodes;
-        foreach (XmlNode node in nodes)
+        if (symbol is IMethodSymbol methodSymbol)
         {
-            var nodeLines = node.OuterXml.Split([Symbols.Codes.NewLine], StringSplitOptions.RemoveEmptyEntries);
-            foreach (var nodeLine in nodeLines)
+            var apiCommentAttribute = GetAttributesIncludeOverride(methodSymbol).SingleOrDefault(attribute =>
+                attribute.AttributeClass!.ToDisplayString() == Symbols.Types.Project.ApiCommentAttribute);
+            if (apiCommentAttribute is null)
             {
-                foreach (var _ in Enumerable.Range(0, indentLevel))
-                {
-                    builder.Append(Symbols.Codes.Ident);
-                }
+                return;
+            }
 
-                builder.AppendFormat("/// {0}", nodeLine.Trim()).AppendLine();
+            var comment = (string)apiCommentAttribute.ConstructorArguments.Single().Value!;
+
+            AppendIndent();
+            builder.AppendLine("/// <summary>");
+            AppendIndent();
+            builder.AppendFormat("/// {0}", comment.Trim()).AppendLine();
+            AppendIndent();
+            builder.AppendLine("/// </summary>");
+
+            foreach (var parameterSymbol in methodSymbol.Parameters)
+            {
+                GenerateComments(builder, parameterSymbol, indentLevel);
+            }
+        }
+        else if (symbol is IParameterSymbol parameterSymbol)
+        {
+            var apiCommentAttribute = parameterSymbol.GetAttributes().SingleOrDefault(attribute =>
+                attribute.AttributeClass!.ToDisplayString() == Symbols.Types.Project.ApiCommentAttribute);
+            if (apiCommentAttribute is null)
+            {
+                return;
+            }
+
+            var comment = (string)apiCommentAttribute.ConstructorArguments.Single().Value!;
+
+            AppendIndent();
+            builder.AppendFormat("""/// <param name="{0}">{1}</param>""", parameterSymbol.Name, comment.Trim())
+                .AppendLine();
+        }
+
+        return;
+
+        void AppendIndent()
+        {
+            foreach (var _ in Enumerable.Range(0, indentLevel))
+            {
+                builder.Append(Symbols.Codes.Ident);
             }
         }
     }
@@ -603,8 +636,8 @@ public class ControllerGenerator : ISourceGenerator
     private static IEnumerable<IMethodSymbol> GetHttpMethods(ITypeSymbol @class, string rule)
     {
         var regex = new Regex(rule, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace);
-        List<IMethodSymbol> ignoredMethods = [];
-        List<string> hiddenMethodNames = [];
+        var ignoredMethods = new List<IMethodSymbol>();
+        var hiddenMethodNames = new List<string>();
         while (true)
         {
             foreach (var method in @class.GetMembers().OfType<IMethodSymbol>())
@@ -661,9 +694,27 @@ public class ControllerGenerator : ISourceGenerator
 
     private static AttributeData[] GetAttributesIncludeOverride(IMethodSymbol method)
     {
-        var attribute = method.GetAttributes();
+        var attributes = method.GetAttributes();
         return (!method.IsOverride
-            ? attribute
-            : attribute.Concat(GetAttributesIncludeOverride(method.OverriddenMethod!))).ToArray();
+            ? attributes
+            : attributes.Concat(GetAttributesIncludeOverride(method.OverriddenMethod!))).ToArray();
+    }
+
+    private static INamedTypeSymbol? GetBaseClass(INamedTypeSymbol @class, string baseClassFullName)
+    {
+        var baseClass = @class;
+        while (true)
+        {
+            if (baseClass is null)
+            {
+                return null;
+            }
+
+            baseClass = baseClass.BaseType;
+            if ($"{baseClass?.ContainingNamespace}.{baseClass?.Name}" == baseClassFullName)
+            {
+                return baseClass;
+            }
+        }
     }
 }

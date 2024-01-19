@@ -7,8 +7,17 @@
     <LangVersion>default</LangVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\net8.0\DoliteTemplate.Domain.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\net8.0\DoliteTemplate.Domain.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\DoliteTemplate.Shared\DoliteTemplate.Shared.csproj"/>
+    <ProjectReference Include="..\DoliteTemplate.Domain.Shared\DoliteTemplate.Domain.Shared.csproj"/>
+    <ProjectReference Include="..\DoliteTemplate.Api.Shared\DoliteTemplate.Api.Shared.csproj"/>
   </ItemGroup>
 
 </Project>

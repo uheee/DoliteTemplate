@@ -1,0 +1,1 @@
+global using DoliteTemplate.Api.Shared.Utils;

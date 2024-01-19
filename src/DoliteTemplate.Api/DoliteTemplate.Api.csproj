@@ -14,6 +14,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\net8.0\DoliteTemplate.Api.xml</DocumentationFile>
     <NoWarn>1701;1702;1591;9107;9113;IL2121</NoWarn>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Autofac" Version="8.0.0"/>
@@ -33,11 +34,8 @@
   <ItemGroup>
     <ProjectReference Include="..\DoliteTemplate.Domain\DoliteTemplate.Domain.csproj"/>
     <ProjectReference Include="..\DoliteTemplate.Infrastructure\DoliteTemplate.Infrastructure.csproj"/>
-    <ProjectReference Include="..\DoliteTemplate.Shared\DoliteTemplate.Shared.csproj"/>
+    <ProjectReference Include="..\DoliteTemplate.Api.Shared\DoliteTemplate.Api.Shared.csproj"/>
     <ProjectReference Include="..\DoliteTemplate.CodeGenerator\DoliteTemplate.CodeGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
-  </ItemGroup>
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="localization\zh_cn.json"/>
   </ItemGroup>
   <Target Name="Husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' != 0">
     <Exec Command="git init" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="../.."/>

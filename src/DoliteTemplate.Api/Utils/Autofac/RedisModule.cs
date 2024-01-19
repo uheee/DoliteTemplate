@@ -1,5 +1,5 @@
 using Autofac;
-using DoliteTemplate.Shared.Constants;
+using DoliteTemplate.Api.Shared.Constants;
 using StackExchange.Redis;
 
 namespace DoliteTemplate.Api.Utils.Autofac;

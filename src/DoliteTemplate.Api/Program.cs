@@ -1,8 +1,10 @@
 using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using DoliteTemplate.Api.Utils;
-using DoliteTemplate.Shared.Utils;
+using DoliteTemplate.Api.Shared.Constants;
+using DoliteTemplate.Domain.Shared.Utils;
+using DoliteTemplate.Infrastructure.DbContexts;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,19 +15,25 @@ builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Confi
 // Use Autofac
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(options =>
-    options.RegisterAssemblyModules(Assembly.GetExecutingAssembly()));
+{
+    options.RegisterAssemblyModules(Assembly.GetExecutingAssembly());
+});
 
 // Use AutoMapper
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 // Use EF Core
-// builder.Services.AddDbContext<ApiDbContext>();
+builder.Services.AddDbContext<ApiDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString(ConnectionStrings.Database);
+    options.UseNpgsql(connectionString);
+});
 
 // Use Auth
 var encryptHelper = new EncryptHelper(builder.Configuration["Key:Path"]);
 builder.Services.AddSingleton(encryptHelper);
 builder.Services.ConfigureAuthentication(builder.Configuration, encryptHelper.GetPublicKey("user"));
-builder.Services.AddAuthorization(options => options.AutoSetPolicies());
+builder.Services.AddAuthorization(options => options.AutoSetPolicies(Assembly.GetExecutingAssembly()));
 
 // Use Localization
 builder.Services.AddLocalization();
@@ -39,6 +47,9 @@ builder.Services.AddHttpContextAccessor();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.ConfigureOpenApi(builder.Configuration);
+
+// Controllers
+builder.Services.AddControllers(options => options.UseDefaultMvcOptions(builder.Configuration));
 
 var app = World.App = builder.Build();
 
