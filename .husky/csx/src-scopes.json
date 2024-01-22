@@ -1,0 +1,24 @@
+{
+  "Definitions": [
+    {
+      "PathRoot": "src",
+      "ProjectPrefix": "DoliteTemplate.",
+      "ScopePrefix": "$"
+    },
+    {
+      "PathRoot": "test",
+      "ProjectPrefix": "DoliteTemplate.Test.",
+      "ScopePrefix": "$test."
+    }
+  ],
+  "Redefinitions": [
+    {
+      "Filename": "DoliteTemplate.sln",
+      "PathRoot": "src"
+    },
+    {
+      "Filename": "README.md",
+      "PathRoot": "doc"
+    }
+  ]
+}

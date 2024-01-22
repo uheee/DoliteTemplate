@@ -17,6 +17,7 @@
         "script",
         ".husky/csx/commit-lint.csx",
         "--",
+        ".husky/csx/src-scopes.json",
         "${args}",
         "${staged}"
       ]

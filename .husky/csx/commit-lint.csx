@@ -4,12 +4,13 @@
 
 using System.Text.RegularExpressions;
 
-var filename = Args.First();
+var scopeFilename = Args[0];
+var filename = Args[1];
 var messageLines = File.ReadAllLines(filename);
 if (!CommitMessage.TryParse(messageLines, out var commitMessage) || commitMessage is null) return 1;
 
 // auto set scope
-if (string.IsNullOrEmpty(commitMessage.Title.Scope) && GetScope(Args.Skip(1), out var scope)) commitMessage.Title.Scope = scope;
+if (string.IsNullOrEmpty(commitMessage.Title.Scope) && GetScope(Args.Skip(2), scopeFilename, out var scope)) commitMessage.Title.Scope = scope;
 // attach breaking flag
 commitMessage.Title.Breaking = commitMessage.Footers?.Any(footer => footer.Key == "BREAKING CHANGE") ?? false;
 // check revert refs
