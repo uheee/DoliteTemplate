@@ -5,6 +5,7 @@ using System.Data.Common;
 using AutoMapper;
 using DoliteTemplate.Api.Shared.Errors;
 using DoliteTemplate.Api.Shared.Utils;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 
@@ -14,7 +15,7 @@ namespace DoliteTemplate.Api.Shared.Services;
 ///     基础服务
 /// </summary>
 /// <param name="mapper">映射器</param>
-public abstract class BaseService(IMapper mapper)
+public abstract class BaseService(IMapper mapper) : ControllerBase
 {
     /// <summary>
     ///     映射器
@@ -41,6 +42,7 @@ public class BaseService<TService>(
     /// </param>
     /// <param name="args">参数</param>
     /// <returns></returns>
+    [NonAction]
     public BusinessException Error(string errCode, params object[] args)
     {
         var errTemplate = localizer[errCode];

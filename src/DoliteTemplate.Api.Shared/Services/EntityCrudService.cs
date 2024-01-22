@@ -1,6 +1,5 @@
 using AutoMapper;
 using DoliteTemplate.Api.Shared.Services.Base;
-using DoliteTemplate.Api.Shared.Utils;
 using DoliteTemplate.Domain.Shared.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -29,10 +28,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDeta
 {
     [HttpPut]
     [Route("{id:guid}")]
-    [ApiComment("更新实体")]
-    public override async Task<int> Update(
-        [ApiComment("实体唯一标识")] Guid id,
-        [FromBody][ApiComment("更新实体相关DTO")] TUpdateDto dto)
+    public override async Task<int> Update(Guid id, TUpdateDto dto)
     {
         var query = DbContext.Set<TEntity>().AsTracking();
         query = QueryOneInclude(query);
@@ -49,9 +45,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDeta
 
     [HttpDelete]
     [Route("{id:guid}")]
-    [ApiComment("删除单个实体")]
-    public override async Task<int> Delete(
-        [ApiComment("实体唯一标识")] Guid id)
+    public override async Task<int> Delete(Guid id)
     {
         var query = DbContext.Set<TEntity>().AsTracking();
         query = DeleteInclude(query);
@@ -66,9 +60,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDeta
     }
 
     [HttpDelete]
-    [ApiComment("删除多个实体")]
-    public override async Task<int> DeleteRange(
-        [FromBody][ApiComment("实体唯一标识")] IEnumerable<Guid> ids)
+    public override async Task<int> DeleteRange(IEnumerable<Guid> ids)
     {
         var query = DbContext.Set<TEntity>().AsTracking();
         query = DeleteInclude(query);
@@ -84,6 +76,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDeta
     /// </summary>
     /// <param name="entry">实体Entry</param>
     /// <param name="updateDto">更新实体相关DTO</param>
+    [NonAction]
     protected virtual void UpdateMarkDirtyManually(EntityEntry<TEntity> entry, TUpdateDto updateDto)
     {
     }

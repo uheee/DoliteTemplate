@@ -1,4 +1,3 @@
-using DoliteTemplate.Api.Shared.Utils;
 using DoliteTemplate.Domain.Shared.Entities;
 
 namespace DoliteTemplate.Domain.Entities;
@@ -11,6 +10,5 @@ public class Order : AuditedSoftDeletableEntity
     /// <summary>
     ///     订单编号
     /// </summary>
-    [QueryParameter(Description = "This is NO!", Comparor = "contains")]
     public string No { get; set; } = null!;
 }

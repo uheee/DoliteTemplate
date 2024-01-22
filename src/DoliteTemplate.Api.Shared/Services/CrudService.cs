@@ -35,6 +35,7 @@ public abstract class CrudService<
     /// </summary>
     /// <param name="id">实体唯一标识</param>
     /// <returns>实体</returns>
+    [NonAction]
     public virtual ValueTask<TEntity?> GetRaw(TKey id)
     {
         return DbContext.Set<TEntity>().FindAsync(id);
@@ -44,6 +45,7 @@ public abstract class CrudService<
     ///     查看所有实体
     /// </summary>
     /// <returns>实体</returns>
+    [NonAction]
     public virtual async Task<IEnumerable<TEntity>> GetAllRaw()
     {
         var query = DbContext.Set<TEntity>().AsTracking();
@@ -56,6 +58,7 @@ public abstract class CrudService<
     /// </summary>
     /// <param name="dto">创建实体相关DTO</param>
     /// <returns>实体</returns>
+    [NonAction]
     public virtual async Task<TEntity> CreateRaw(TCreateDto dto)
     {
         var entity = Mapper.Map<TEntity>(dto);
@@ -64,22 +67,32 @@ public abstract class CrudService<
         return entity;
     }
 
+    /// <summary>
+    ///     根据条件筛选获取实体
+    /// </summary>
+    /// <param name="predicate">条件</param>
+    /// <returns></returns>
+    [NonAction]
+    public virtual async Task<IEnumerable<TEntity>> GetWhereRaw(Expression<Func<TEntity, bool>> predicate)
+    {
+        var query = DbContext.Set<TEntity>().AsTracking();
+        query = QueryManyInclude(query);
+        return await query.Where(predicate).ToArrayAsync();
+    }
+
     #endregion
 
     #region HTTP methods
 
     [HttpGet]
-    [Route("{id:guid}")]
-    [ApiComment("查看单个实体")]
-    public virtual async Task<TDetailDto?> Get(
-        [ApiComment("实体唯一标识")] TKey id)
+    [Route("{id}")]
+    public virtual async Task<TDetailDto?> Get(TKey id)
     {
         var entity = await GetRaw(id);
         return Mapper.Map<TDetailDto>(entity);
     }
 
     [HttpGet]
-    [ApiComment("查看所有实体")]
     public virtual async Task<IEnumerable<TOverallDto>> GetAll()
     {
         var entities = await GetAllRaw();
@@ -88,10 +101,7 @@ public abstract class CrudService<
 
     [HttpGet]
     [Route("paging")]
-    [ApiComment("分页查看所有实体")]
-    public virtual async Task<PaginatedList<TOverallDto>> GetAllPaged(
-        [ApiComment("页码")] int pageIndex,
-        [ApiComment("页大小")] int pageSize)
+    public virtual async Task<PaginatedList<TOverallDto>> GetAllPaged(int pageIndex, int pageSize)
     {
         var query = DbContext.Set<TEntity>().AsTracking();
         query = QueryManyInclude(query);
@@ -99,17 +109,8 @@ public abstract class CrudService<
         return Mapper.Map<PaginatedList<TOverallDto>>(result);
     }
 
-    public virtual async Task<IEnumerable<TEntity>> GetWhereRaw(Expression<Func<TEntity, bool>> predicate)
-    {
-        var query = DbContext.Set<TEntity>().AsTracking();
-        query = QueryManyInclude(query);
-        return await query.Where(predicate).ToArrayAsync();
-    }
-
     [HttpPost]
-    [ApiComment("创建实体")]
-    public virtual async Task<TDetailDto> Create(
-        [ApiComment("创建实体相关DTO")][FromBody] TCreateDto dto)
+    public virtual async Task<TDetailDto> Create(TCreateDto dto)
     {
         var entity = await CreateRaw(dto);
         return Mapper.Map<TDetailDto>(entity);
@@ -131,6 +132,7 @@ public abstract class CrudService<
     /// </summary>
     /// <param name="query">查询</param>
     /// <returns>查询</returns>
+    [NonAction]
     public virtual IQueryable<TEntity> QueryInclude(IQueryable<TEntity> query)
     {
         return query;
@@ -142,6 +144,7 @@ public abstract class CrudService<
     ///     <para>该方法默认与<see cref="QueryInclude" />保持一致</para>
     /// </summary>
     /// <inheritdoc cref="QueryInclude" />
+    [NonAction]
     public virtual IQueryable<TEntity> QueryOneInclude(IQueryable<TEntity> query)
     {
         return QueryInclude(query);
@@ -153,6 +156,7 @@ public abstract class CrudService<
     ///     <para>该方法默认与<see cref="QueryInclude" />保持一致</para>
     /// </summary>
     /// <inheritdoc cref="QueryInclude" />
+    [NonAction]
     public virtual IQueryable<TEntity> QueryManyInclude(IQueryable<TEntity> query)
     {
         return QueryInclude(query);
@@ -163,6 +167,7 @@ public abstract class CrudService<
     ///     <remarks>重写该方法以指定删除时需要关联的其他实体</remarks>
     /// </summary>
     /// <inheritdoc cref="QueryInclude" />
+    [NonAction]
     public virtual IQueryable<TEntity> DeleteInclude(IQueryable<TEntity> query)
     {
         return query;
