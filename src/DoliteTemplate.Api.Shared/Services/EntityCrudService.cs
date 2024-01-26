@@ -26,6 +26,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDeta
     where TDbContext : DbContext
     where TEntity : BaseEntity, new()
 {
+    /// <inheritdoc />
     [HttpPut]
     [Route("{id:guid}")]
     public override async Task<int> Update(Guid id, TUpdateDto dto)
@@ -43,6 +44,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDeta
         return await DbContext.SaveChangesAsync();
     }
 
+    /// <inheritdoc />
     [HttpDelete]
     [Route("{id:guid}")]
     public override async Task<int> Delete(Guid id)
@@ -59,6 +61,7 @@ public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDeta
         return await DbContext.SaveChangesAsync();
     }
 
+    /// <inheritdoc />
     [HttpDelete]
     public override async Task<int> DeleteRange(IEnumerable<Guid> ids)
     {

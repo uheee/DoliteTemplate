@@ -11,13 +11,13 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DocumentationFile>bin\Debug\net8.0\DoliteTemplate.Api.Shared.xml</DocumentationFile>
-    <NoWarn>1701;1702;1591;IL2121</NoWarn>
+    <NoWarn>1591;1701;1702;8618;IL2121</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\net8.0\DoliteTemplate.Api.Shared.xml</DocumentationFile>
     <DebugSymbols>false</DebugSymbols>
-    <NoWarn>1701;1702;1591;IL2121</NoWarn>
+    <NoWarn>1591;1701;1702;8618;IL2121</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,9 +30,9 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0"/>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0"/>
     <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="8.0.1"/>
+    <PackageReference Include="NSwag.AspNetCore" Version="14.0.2"/>
     <PackageReference Include="SHA3.Net" Version="2.0.0"/>
     <PackageReference Include="StackExchange.Redis" Version="2.7.17"/>
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0"/>
   </ItemGroup>
 
   <ItemGroup>

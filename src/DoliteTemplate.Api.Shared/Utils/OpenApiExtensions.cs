@@ -1,8 +1,7 @@
-using System.Reflection;
-using DoliteTemplate.Api.Shared.Swagger;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+using NSwag;
+using NSwag.Generation.Processors.Security;
 
 namespace DoliteTemplate.Api.Shared.Utils;
 
@@ -19,51 +18,39 @@ public static class OpenApiExtensions
     /// <exception cref="Exception">未设置OpenAPI配置项</exception>
     public static void ConfigureOpenApi(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSwaggerGen(options =>
+        services.AddOpenApiDocument(document =>
         {
-            var info = configuration.GetSection("OpenApi").Get<OpenApiInfo>() ??
-                       throw new Exception("Missing OpenApi info");
-            options.SwaggerDoc(info.Version, info);
-            var xmlFilename = $"{Assembly.GetEntryAssembly()!.GetName().Name}.xml";
-            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename), true);
-            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "DoliteTemplate.Domain.xml"), true);
-            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "DoliteTemplate.Api.Shared.xml"), true);
-            var securitySchema = configuration.GetSection("OpenApi:Security:Definition").Get<OpenApiSecurityScheme>();
-            if (securitySchema is not null)
+            var openApiConfiguration = configuration.GetSection("OpenApi").Get<OpenApiConfiguration>();
+            if (openApiConfiguration is null)
             {
-                options.AddSecurityDefinition(securitySchema.Scheme, securitySchema);
+                return;
             }
 
-            var securityRequirementItems = configuration.GetSection("OpenApi:Security:Requirement")
-                .Get<OpenApiSecurityRequirementItem[]>();
-            if (securityRequirementItems is not null)
+            document.Version = openApiConfiguration.Version;
+            document.Title = openApiConfiguration.Title;
+            document.Description = openApiConfiguration.Description;
+            foreach (var (name, securityConfiguration) in openApiConfiguration.Security)
             {
-                var securityRequirement = new OpenApiSecurityRequirement();
-                foreach (var item in securityRequirementItems)
-                {
-                    securityRequirement.Add(item.Key, item.Value);
-                }
-
-                options.AddSecurityRequirement(securityRequirement);
-            }
-
-            options.SchemaFilter<IpAddressSchemaFilter>();
-            options.SchemaFilter<JsonNodeSchemaFilter>();
-
-            var requestRoutePrefix = configuration["OpenApi:RequestRoutePrefix"];
-            if (!string.IsNullOrEmpty(requestRoutePrefix))
-            {
-                options.DocumentFilter<PathPrefixInsertDocumentFilter>(requestRoutePrefix);
+                document.AddSecurity(name, securityConfiguration.Scopes, securityConfiguration.Scheme);
+                document.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor(name));
             }
         });
     }
 }
 
+public class OpenApiConfiguration
+{
+    public string Version { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public IDictionary<string, OpenApiSecurityConfiguration> Security { get; set; }
+}
+
 /// <summary>
 ///     OpenAPI安全需求配置
 /// </summary>
-public class OpenApiSecurityRequirementItem
+public class OpenApiSecurityConfiguration
 {
-    public OpenApiSecurityScheme Key { get; set; } = null!;
-    public IList<string> Value { get; set; } = Array.Empty<string>();
+    public OpenApiSecurityScheme Scheme { get; set; }
+    public string[] Scopes { get; set; } = [];
 }

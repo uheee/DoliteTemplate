@@ -84,6 +84,7 @@ public abstract class CrudService<
 
     #region HTTP methods
 
+    /// <inheritdoc />
     [HttpGet]
     [Route("{id}")]
     public virtual async Task<TDetailDto?> Get(TKey id)
@@ -92,6 +93,7 @@ public abstract class CrudService<
         return Mapper.Map<TDetailDto>(entity);
     }
 
+    /// <inheritdoc />
     [HttpGet]
     public virtual async Task<IEnumerable<TOverallDto>> GetAll()
     {
@@ -99,6 +101,7 @@ public abstract class CrudService<
         return Mapper.Map<IEnumerable<TOverallDto>>(entities);
     }
 
+    /// <inheritdoc />
     [HttpGet]
     [Route("paging")]
     public virtual async Task<PaginatedList<TOverallDto>> GetAllPaged(int pageIndex, int pageSize)
@@ -109,6 +112,7 @@ public abstract class CrudService<
         return Mapper.Map<PaginatedList<TOverallDto>>(result);
     }
 
+    /// <inheritdoc />
     [HttpPost]
     public virtual async Task<TDetailDto> Create(TCreateDto dto)
     {
@@ -116,10 +120,13 @@ public abstract class CrudService<
         return Mapper.Map<TDetailDto>(entity);
     }
 
+    /// <inheritdoc />
     public abstract Task<int> Update(TKey id, TUpdateDto dto);
 
+    /// <inheritdoc />
     public abstract Task<int> Delete(TKey id);
 
+    /// <inheritdoc />
     public abstract Task<int> DeleteRange(IEnumerable<TKey> ids);
 
     #endregion

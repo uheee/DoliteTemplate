@@ -9,11 +9,11 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DocumentationFile>bin\Debug\net8.0\DoliteTemplate.Api.xml</DocumentationFile>
-    <NoWarn>1701;1702;1591;9107;9113;IL2121</NoWarn>
+    <NoWarn>1591;1701;1702;8618;9107;9113;IL2121</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\net8.0\DoliteTemplate.Api.xml</DocumentationFile>
-    <NoWarn>1701;1702;1591;9107;9113;IL2121</NoWarn>
+    <NoWarn>1591;1701;1702;8618;9107;9113;IL2121</NoWarn>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
@@ -29,7 +29,6 @@
     <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0"/>
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1"/>
     <PackageReference Include="StackExchange.Redis" Version="2.7.17"/>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DoliteTemplate.Domain\DoliteTemplate.Domain.csproj"/>
