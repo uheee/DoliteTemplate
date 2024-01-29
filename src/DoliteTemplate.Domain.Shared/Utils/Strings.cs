@@ -8,5 +8,5 @@ public static class Strings
     /// <summary>
     ///     分隔符
     /// </summary>
-    public static readonly char[] Separator = { ' ', ',', ';', '|' };
+    public static readonly char[] Separator = [' ', ',', ';', '|'];
 }

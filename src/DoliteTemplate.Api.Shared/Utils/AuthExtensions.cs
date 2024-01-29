@@ -1,10 +1,10 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using DoliteTemplate.Domain.Shared.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
@@ -13,7 +13,7 @@ namespace DoliteTemplate.Api.Shared.Utils;
 /// <summary>
 ///     认证授权扩展
 /// </summary>
-public static partial class AuthorizationExtensions
+public static partial class AuthExtensions
 {
     private static readonly Regex RoleRegex = GenerateRoleRegex();
 
@@ -55,7 +55,7 @@ public static partial class AuthorizationExtensions
                 continue;
             }
 
-            var requiredRoles = match.Groups[1].Value.Split(new[] {' ', ',', '|'},
+            var requiredRoles = match.Groups[1].Value.Split(Strings.Separator,
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             var allowedRoles = requiredRoles.SelectMany(GetRoleParts).Distinct();
             options.AddPolicy(policy, config => config.AddRequirements(
@@ -80,30 +80,27 @@ public static partial class AuthorizationExtensions
     ///     <remarks>该方法自动为应用配置基于ApiKey JWT token的认证模式</remarks>
     /// </summary>
     /// <param name="services">服务集合</param>
-    /// <param name="configuration">配置项</param>
     /// <param name="securityKey">密钥</param>
-    public static void ConfigureAuthentication(this IServiceCollection services,
-        IConfiguration configuration, ECDsaSecurityKey securityKey)
+    public static void ConfigureAuthentication(this IServiceCollection services, ECDsaSecurityKey securityKey)
     {
-        var schema = configuration["Authentication:Schema"];
-        if (string.IsNullOrEmpty(schema))
-        {
-            return;
-        }
+        #region Bearer
 
-        services.AddAuthentication(schema)
-            .AddScheme<JwtBearerOptions, JwtBearerExclusiveLoginHandler>(schema, options =>
+        services.AddAuthentication("Bearer")
+            .AddScheme<JwtBearerOptions, JwtBearerExclusiveLoginHandler>("Bearer", options =>
             {
-                var tokenValidationParameters = configuration
-                    .GetSection("Authentication:TokenValidationParameters")
-                    .Get<TokenValidationParameters>();
-                if (tokenValidationParameters is null)
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    return;
-                }
-
-                tokenValidationParameters.IssuerSigningKey = securityKey;
-                options.TokenValidationParameters = tokenValidationParameters;
+                    ValidTypes = ["JWT"],
+                    ValidAlgorithms = ["ES256"],
+                    IssuerSigningKey = securityKey,
+                    ValidateIssuerSigningKey = true,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    RequireExpirationTime = true
+                };
             });
+
+        #endregion
     }
 }

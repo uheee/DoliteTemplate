@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using AutoMapper;
 using DoliteTemplate.Api.Shared.Services;
 using DoliteTemplate.Domain.DTOs;
@@ -12,6 +13,7 @@ namespace DoliteTemplate.Api.Services;
 ///     Device Service
 /// </summary>
 [ApiController]
+[ApiVersion("1.0")]
 [Route("[controller]")]
 public class OrderService(
     IMapper mapper,
