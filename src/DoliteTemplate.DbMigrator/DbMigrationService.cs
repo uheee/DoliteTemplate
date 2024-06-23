@@ -58,7 +58,7 @@ public class DbMigrationService<TDbContext> : BackgroundService where TDbContext
     private static async IAsyncEnumerable<string> GetScripts(string dirname,
         [EnumeratorCancellation] CancellationToken stoppingToken)
     {
-        foreach (var file in Directory.GetFiles(dirname, "*.sql"))
+        foreach (var file in Directory.GetFiles(dirname, "*.sql", SearchOption.AllDirectories))
         {
             var sql = await File.ReadAllTextAsync(file, Encoding.UTF8, stoppingToken);
             yield return sql;
