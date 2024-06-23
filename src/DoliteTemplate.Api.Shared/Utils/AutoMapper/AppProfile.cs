@@ -1,7 +1,7 @@
 using AutoMapper;
 using DoliteTemplate.Domain.Shared.Utils;
 
-namespace DoliteTemplate.Api.Utils.AutoMapper;
+namespace DoliteTemplate.Api.Shared.Utils.AutoMapper;
 
 /// <summary>
 ///     应用映射器

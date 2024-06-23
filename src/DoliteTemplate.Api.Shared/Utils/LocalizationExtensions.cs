@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DoliteTemplate.Api.Shared.Utils;
 
@@ -12,9 +13,9 @@ public static class LocalizationExtensions
     ///     使用本地化功能
     /// </summary>
     /// <param name="webApp">Web应用</param>
-    /// <param name="configuration">配置项</param>
-    public static void UseLocalization(this IApplicationBuilder webApp, IConfiguration configuration)
+    public static void UseLocalization(this IApplicationBuilder webApp)
     {
+        var configuration = webApp.ApplicationServices.GetService<IConfiguration>()!;
         webApp.UseRequestLocalization(options =>
         {
             var supportedCultures = configuration.GetSection("Culture:Cultures").Get<string[]>();

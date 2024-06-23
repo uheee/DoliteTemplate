@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using StackExchange.Redis;
+using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace DoliteTemplate.Api.Shared.Utils;
 
@@ -15,7 +15,7 @@ namespace DoliteTemplate.Api.Shared.Utils;
 ///     <remarks>用于响应token过期、处理多地登录等情况</remarks>
 /// </summary>
 public class JwtBearerExclusiveLoginHandler(
-    Lazy<IConnectionMultiplexer> redisProvider,
+    Lazy<IRedisDatabase> redisProvider,
     IWebHostEnvironment environment,
     IOptionsMonitor<JwtBearerOptions> options,
     ILoggerFactory logger,
@@ -35,7 +35,7 @@ public class JwtBearerExclusiveLoginHandler(
         var currentToken = Request.Headers.Authorization.ToString()[("Bearer".Length + 1)..];
         var userId = result.Ticket.Principal.FindFirstValue(ClaimKeys.UserId);
         var key = $"user:token:{userId}";
-        string? cachedToken = await redisProvider.Value.GetDatabase().StringGetAsync(key);
+        var cachedToken = await redisProvider.Value.GetAsync<string>(key);
         if (cachedToken is null || string.Equals(currentToken, cachedToken))
         {
             return AuthenticateResult.Success(result.Ticket);

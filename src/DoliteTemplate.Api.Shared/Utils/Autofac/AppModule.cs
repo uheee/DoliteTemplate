@@ -4,7 +4,7 @@ using DoliteTemplate.Api.Shared.Services;
 using Microsoft.AspNetCore.Mvc;
 using Module = Autofac.Module;
 
-namespace DoliteTemplate.Api.Utils.Autofac;
+namespace DoliteTemplate.Api.Shared.Utils.Autofac;
 
 /// <summary>
 ///     应用映射模块
@@ -13,11 +13,14 @@ public class AppModule : Module
 {
     protected override void Load(ContainerBuilder builder)
     {
-        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+        var assembly = Assembly.GetEntryAssembly()!;
+        builder.RegisterAssemblyTypes(assembly)
             .Where(type => type.BaseType == typeof(ControllerBase))
+            .AsImplementedInterfaces()
+            .AsSelf()
             .PropertiesAutowired();
-        builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-            .Where(type => type.IsAssignableTo<BaseService>())
+        builder.RegisterAssemblyTypes(assembly)
+            .AsClosedTypesOf(typeof(BaseService<>))
             .AsImplementedInterfaces()
             .AsSelf()
             .PropertiesAutowired();

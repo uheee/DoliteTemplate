@@ -23,10 +23,9 @@ public static partial class AuthExtensions
     ///     <example>如要配置某个Service类或方法仅授权给administer角色，需要配置为<b>[Authorize("role(administrator)")]</b></example>
     /// </summary>
     /// <param name="options">认证授权配置</param>
-    /// <param name="assembly">当前程序集</param>
-    public static void AutoSetPolicies(this AuthorizationOptions options, Assembly assembly)
+    public static void AutoSetPolicies(this AuthorizationOptions options)
     {
-        var policies = assembly.GetExportedTypes()
+        var policies = Assembly.GetEntryAssembly()!.GetExportedTypes()
             .Where(type => type.IsAssignableTo(typeof(ControllerBase)))
             .SelectMany(type =>
             {
