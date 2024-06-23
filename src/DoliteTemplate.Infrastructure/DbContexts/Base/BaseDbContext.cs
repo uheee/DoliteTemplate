@@ -165,7 +165,7 @@ public abstract class BaseDbContext<TDbContext> : DbContext where TDbContext : D
             BindingFlags.Public | BindingFlags.Static)!;
         foreach (var entry in entries)
         {
-            if (entry.Metadata.IsOwned())
+            if (entry.Metadata.IsOwned() || entry.State == EntityState.Unchanged || entry.State == EntityState.Deleted)
             {
                 continue;
             }
