@@ -1,10 +1,8 @@
-using AutoMapper;
 using DoliteTemplate.Api.Shared.Services.Base;
 using DoliteTemplate.Domain.Shared.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Localization;
 
 namespace DoliteTemplate.Api.Shared.Services;
 
@@ -13,14 +11,8 @@ namespace DoliteTemplate.Api.Shared.Services;
 /// </summary>
 /// <inheritdoc cref="BaseService{TService,TDbContext}" />
 /// <inheritdoc cref="IEntityCrudService{TEntity,TOverallDto,TDetailDto,TCreateDto,TUpdateDto}" />
-public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDetailDto, TCreateDto, TUpdateDto>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    CrudService<TService, TDbContext, TEntity, Guid, TOverallDto, TDetailDto, TCreateDto, TUpdateDto>(
-        mapper,
-        localizer,
-        dbContextProvider),
+public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDetailDto, TCreateDto, TUpdateDto> :
+    CrudService<TService, TDbContext, TEntity, Guid, TOverallDto, TDetailDto, TCreateDto, TUpdateDto>,
     IEntityCrudService<TEntity, TOverallDto, TDetailDto, TCreateDto, TUpdateDto>
     where TService : EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDetailDto, TCreateDto, TUpdateDto>
     where TDbContext : DbContext
@@ -104,14 +96,8 @@ public class EntityCrudService<TService, TDbContext, TEntity, TOverallDto, TDeta
 /// </summary>
 /// <inheritdoc cref="BaseService{TService,TDbContext}" />
 /// <inheritdoc cref="IEntityCrudService{TEntity,TReadDto,TCreateDto,TUpdateDto}" />
-public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreate, TUpdateDto>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    EntityCrudService<TService, TDbContext, TEntity, TReadDto, TReadDto, TCreate, TUpdateDto>(
-        mapper,
-        localizer,
-        dbContextProvider),
+public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreate, TUpdateDto> :
+    EntityCrudService<TService, TDbContext, TEntity, TReadDto, TReadDto, TCreate, TUpdateDto>,
     IEntityCrudService<TEntity, TReadDto, TCreate, TUpdateDto>
     where TService : EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreate, TUpdateDto>
     where TDbContext : DbContext
@@ -122,14 +108,8 @@ public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreate,
 /// </summary>
 /// <inheritdoc cref="BaseService{TService,TDbContext}" />
 /// <inheritdoc cref="IEntityCrudService{TEntity,TReadDto,TCreateUpdateDto}" />
-public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto, TCreateUpdateDto>(
-        mapper,
-        localizer,
-        dbContextProvider),
+public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto> :
+    EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto, TCreateUpdateDto>,
     IEntityCrudService<TEntity, TReadDto, TCreateUpdateDto>
     where TService : EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateUpdateDto>
     where TDbContext : DbContext
@@ -140,14 +120,8 @@ public class EntityCrudService<TService, TDbContext, TEntity, TReadDto, TCreateU
 /// </summary>
 /// <inheritdoc cref="BaseService{TService,TDbContext}" />
 /// <inheritdoc cref="IEntityCrudService{TEntity,TDto}" />
-public class EntityCrudService<TService, TDbContext, TEntity, TDto>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    EntityCrudService<TService, TDbContext, TEntity, TDto, TDto, TDto>(
-        mapper,
-        localizer,
-        dbContextProvider),
+public class EntityCrudService<TService, TDbContext, TEntity, TDto> :
+    EntityCrudService<TService, TDbContext, TEntity, TDto, TDto, TDto>,
     IEntityCrudService<TEntity, TDto>
     where TService : EntityCrudService<TService, TDbContext, TEntity, TDto>
     where TDbContext : DbContext

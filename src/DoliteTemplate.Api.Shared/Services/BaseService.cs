@@ -14,25 +14,26 @@ namespace DoliteTemplate.Api.Shared.Services;
 /// <summary>
 ///     基础服务
 /// </summary>
-/// <param name="mapper">映射器</param>
-public abstract class BaseService(IMapper mapper) : ControllerBase
+public abstract class BaseService : ControllerBase
 {
     /// <summary>
     ///     映射器
     /// </summary>
-    public IMapper Mapper { get; } = mapper;
+    public IMapper Mapper { get; init; }
 }
 
 /// <inheritdoc cref="BaseService" />
-/// <param name="localizer">本地化组件</param>
 /// <typeparam name="TService">派生服务类型</typeparam>
-public class BaseService<TService>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer) :
-    BaseService(mapper),
+public class BaseService<TService> :
+    BaseService,
     ICulturalResource<TService>
     where TService : BaseService<TService>
 {
+    /// <summary>
+    ///     本地化组件
+    /// </summary>
+    public IStringLocalizer<TService> Localizer { get; init; }
+
     /// <summary>
     ///     业务逻辑错误
     /// </summary>
@@ -45,7 +46,7 @@ public class BaseService<TService>(
     [NonAction]
     public BusinessException Error(string errCode, params object[] args)
     {
-        var errTemplate = localizer[errCode];
+        var errTemplate = Localizer[errCode];
         var errMsg = string.Format(errTemplate, args);
         if (string.IsNullOrEmpty(errMsg))
         {
@@ -57,22 +58,21 @@ public class BaseService<TService>(
 }
 
 /// <inheritdoc cref="BaseService{TService}" />
-/// <param name="dbContextProvider">数据库上下文惰性实例</param>
 /// <typeparam name="TDbContext">数据库上下文类型</typeparam>
-public class BaseService<TService, TDbContext>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    BaseService<TService>(
-        mapper,
-        localizer)
+public class BaseService<TService, TDbContext> :
+    BaseService<TService>
     where TService : BaseService<TService, TDbContext>
     where TDbContext : DbContext
 {
     /// <summary>
+    ///     数据库上下文惰性实例
+    /// </summary>
+    public Lazy<TDbContext> DbContextProvider { get; init; }
+
+    /// <summary>
     ///     数据库上下文
     /// </summary>
-    public TDbContext DbContext => dbContextProvider.Value;
+    public TDbContext DbContext => DbContextProvider.Value;
 
     /// <summary>
     ///     数据库连接

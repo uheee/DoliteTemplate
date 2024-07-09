@@ -1,11 +1,9 @@
 using System.Linq.Expressions;
-using AutoMapper;
 using DoliteTemplate.Api.Shared.Services.Base;
 using DoliteTemplate.Api.Shared.Utils;
 using DoliteTemplate.Domain.Shared.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Localization;
 
 namespace DoliteTemplate.Api.Shared.Services;
 
@@ -15,14 +13,8 @@ namespace DoliteTemplate.Api.Shared.Services;
 /// <inheritdoc cref="BaseService{TService,TDbContext}" />
 /// <inheritdoc cref="ICrudService{TEntity,TKey,TOverallDto,TDetailDto,TCreateDto,TUpdateDto}" />
 public abstract class CrudService<
-    TService, TDbContext, TEntity, TKey, TOverallDto, TDetailDto, TCreateDto, TUpdateDto>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    BaseService<TService, TDbContext>(
-        mapper,
-        localizer,
-        dbContextProvider),
+    TService, TDbContext, TEntity, TKey, TOverallDto, TDetailDto, TCreateDto, TUpdateDto> :
+    BaseService<TService, TDbContext>,
     ICrudService<TEntity, TKey, TOverallDto, TDetailDto, TCreateDto, TUpdateDto>
     where TService : CrudService<TService, TDbContext, TEntity, TKey, TOverallDto, TDetailDto, TCreateDto, TUpdateDto>
     where TDbContext : DbContext
@@ -188,14 +180,8 @@ public abstract class CrudService<
 /// </summary>
 /// <inheritdoc cref="BaseService{TService,TDbContext}" />
 /// <inheritdoc cref="ICrudService{TEntity,TKey,TReadDto,TCreateDto,TUpdateDto}" />
-public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateDto, TUpdateDto>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TReadDto, TCreateDto, TUpdateDto>(
-        mapper,
-        localizer,
-        dbContextProvider),
+public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateDto, TUpdateDto> :
+    CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TReadDto, TCreateDto, TUpdateDto>,
     ICrudService<TEntity, TKey, TReadDto, TCreateDto, TUpdateDto>
     where TService : CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateDto, TUpdateDto>
     where TDbContext : DbContext
@@ -206,14 +192,8 @@ public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto,
 /// </summary>
 /// <inheritdoc cref="BaseService{TService,TDbContext}" />
 /// <inheritdoc cref="ICrudService{TEntity,TKey,TReadDto,TCreateUpdateDto}" />
-public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateUpdateDto>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TReadDto, TCreateUpdateDto, TCreateUpdateDto>(
-        mapper,
-        localizer,
-        dbContextProvider),
+public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateUpdateDto> :
+    CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TReadDto, TCreateUpdateDto, TCreateUpdateDto>,
     ICrudService<TEntity, TKey, TReadDto, TCreateUpdateDto>
     where TService : CrudService<TService, TDbContext, TEntity, TKey, TReadDto, TCreateUpdateDto>
     where TDbContext : DbContext
@@ -224,14 +204,8 @@ public abstract class CrudService<TService, TDbContext, TEntity, TKey, TReadDto,
 /// </summary>
 /// <inheritdoc cref="BaseService{TService,TDbContext}" />
 /// <inheritdoc cref="ICrudService{TEntity,TKey,TDto}" />
-public abstract class CrudService<TService, TDbContext, TEntity, TKey, TDto>(
-    IMapper mapper,
-    IStringLocalizer<TService> localizer,
-    Lazy<TDbContext> dbContextProvider) :
-    CrudService<TService, TDbContext, TEntity, TKey, TDto, TDto, TDto, TDto>(
-        mapper,
-        localizer,
-        dbContextProvider),
+public abstract class CrudService<TService, TDbContext, TEntity, TKey, TDto> :
+    CrudService<TService, TDbContext, TEntity, TKey, TDto, TDto, TDto, TDto>,
     ICrudService<TEntity, TKey, TDto>
     where TService : CrudService<TService, TDbContext, TEntity, TKey, TDto>
     where TDbContext : DbContext
